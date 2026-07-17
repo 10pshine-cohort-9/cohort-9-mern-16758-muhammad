@@ -1,0 +1,7 @@
+reviews:
+  high_level_summary: true
+  review_status: true
+  poem: false
+  path_instructions:
+    - path: "**/*"
+      instructions: "Flag missing TypeScript types as HIGH. Flag async/await without try-catch as MEDIUM. Check React component structure and missing prop validation."

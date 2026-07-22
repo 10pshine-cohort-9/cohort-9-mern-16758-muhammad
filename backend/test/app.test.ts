@@ -170,8 +170,12 @@ describe("structured logger", () => {
     logger.info(
       {
         password: "top-secret",
+        body: { token: "direct-body-token-value" },
         req: {
-          body: { password: "another-secret" },
+          body: {
+            password: "another-secret",
+            token: "request-body-token-value",
+          },
           headers: {
             authorization: "Bearer secret-token",
             cookie: "session=secret-session",
@@ -192,6 +196,8 @@ describe("structured logger", () => {
     expect(entry.password).to.equal("[REDACTED]");
     expect(serializedEntry).not.to.contain("top-secret");
     expect(serializedEntry).not.to.contain("another-secret");
+    expect(serializedEntry).not.to.contain("direct-body-token-value");
+    expect(serializedEntry).not.to.contain("request-body-token-value");
     expect(serializedEntry).not.to.contain("secret-token");
     expect(serializedEntry).not.to.contain("secret-session");
     expect(serializedEntry).not.to.contain("secret-response-session");

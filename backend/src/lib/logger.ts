@@ -14,6 +14,8 @@ const SENSITIVE_PATHS = [
   "req.body.password",
   "token",
   "*.token",
+  "body.token",
+  "req.body.token",
   "req.headers.authorization",
   "req.headers.cookie",
   'res.headers["set-cookie"]',

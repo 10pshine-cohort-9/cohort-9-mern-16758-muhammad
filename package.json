@@ -1,0 +1,41 @@
+{
+  "name": "shine-notes-app",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A secure full-stack notes application for the 10Pearls Shine MERN internship.",
+  "type": "module",
+  "workspaces": [
+    "backend"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace @shine-notes/backend",
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm run test:coverage && npm run build",
+    "dev:backend": "npm run dev --workspace @shine-notes/backend",
+    "format": "prettier --write .coderabbit.yaml .github eslint.config.js package.json backend",
+    "format:check": "prettier --check .coderabbit.yaml .github eslint.config.js package.json backend",
+    "lint": "eslint . --max-warnings=0",
+    "start:backend": "npm run start --workspace @shine-notes/backend",
+    "test": "npm run test --workspace @shine-notes/backend",
+    "test:coverage": "npm run test:coverage --workspace @shine-notes/backend",
+    "typecheck": "npm run typecheck --workspace @shine-notes/backend"
+  },
+  "engines": {
+    "node": ">=22.16.0",
+    "npm": ">=10.9.2"
+  },
+  "packageManager": "npm@10.9.2",
+  "overrides": {
+    "diff": "8.0.3",
+    "glob": "13.0.6",
+    "serialize-javascript": "7.0.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.7.0",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.7.0",
+    "prettier": "^3.9.6",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.65.0"
+  }
+}

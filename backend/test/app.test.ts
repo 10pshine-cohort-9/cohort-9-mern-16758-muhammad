@@ -177,6 +177,11 @@ describe("structured logger", () => {
             cookie: "session=secret-session",
           },
         },
+        res: {
+          headers: {
+            "set-cookie": "session=secret-response-session",
+          },
+        },
       },
       "Sensitive fields test",
     );
@@ -189,5 +194,6 @@ describe("structured logger", () => {
     expect(serializedEntry).not.to.contain("another-secret");
     expect(serializedEntry).not.to.contain("secret-token");
     expect(serializedEntry).not.to.contain("secret-session");
+    expect(serializedEntry).not.to.contain("secret-response-session");
   });
 });

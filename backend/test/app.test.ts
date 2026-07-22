@@ -31,8 +31,12 @@ describe("application foundation", () => {
     const response = await request(
       createApp({ logger: createSilentLogger() }),
     ).get("/health");
+    const contentSecurityPolicy = response.headers["content-security-policy"];
 
-    expect(response.headers["content-security-policy"]).to.be.a("string");
+    expect(contentSecurityPolicy).to.be.a("string");
+    expect(contentSecurityPolicy).to.include("default-src 'self'");
+    expect(contentSecurityPolicy).to.include("object-src 'none'");
+    expect(contentSecurityPolicy).to.include("frame-ancestors 'self'");
     expect(response.headers["x-content-type-options"]).to.equal("nosniff");
     expect(response.headers["x-powered-by"]).to.equal(undefined);
   });

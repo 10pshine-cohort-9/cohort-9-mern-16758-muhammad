@@ -1,6 +1,6 @@
 import { createServer, type Server } from "node:http";
 
-import type { Logger } from "pino";
+import pino, { type Logger } from "pino";
 
 import { createApp } from "./app.js";
 import { loadEnvironment } from "./config/env.js";
@@ -36,7 +36,14 @@ function registerShutdownHandlers(
     logger.info({ signal }, "Shutdown requested");
 
     const timeout = setTimeout(() => {
-      logger.fatal({ timeoutMs }, "Graceful shutdown timed out");
+      const synchronousLogger = createLogger({
+        destination: pino.destination({
+          dest: process.stderr.fd,
+          sync: true,
+        }),
+      });
+
+      synchronousLogger.fatal({ timeoutMs }, "Graceful shutdown timed out");
       process.exit(1);
     }, timeoutMs);
     timeout.unref();

@@ -161,6 +161,34 @@ describe("environment configuration", () => {
 });
 
 describe("structured logger", () => {
+  it("preserves native error details", () => {
+    const chunks: string[] = [];
+    const destination = new Writable({
+      write(chunk, _encoding, callback) {
+        chunks.push(String(chunk));
+        callback();
+      },
+    });
+    const logger = createLogger({ destination });
+    const error = new Error("diagnostic details");
+
+    logger.error({ err: error }, "Failure test");
+
+    const entry = JSON.parse(chunks.join("").trim()) as {
+      readonly err?: {
+        readonly message?: string;
+        readonly stack?: string;
+        readonly type?: string;
+      };
+    };
+
+    expect(entry.err).to.include({
+      message: "diagnostic details",
+      type: "Error",
+    });
+    expect(entry.err?.stack).to.contain("Error: diagnostic details");
+  });
+
   it("redacts credentials from structured log fields", () => {
     const chunks: string[] = [];
     const destination = new Writable({

@@ -12,6 +12,8 @@
     "db:migrate:dev": "prisma migrate dev",
     "db:migrate:status": "prisma migrate status",
     "db:studio": "prisma studio",
+    "db:test:migrate": "prisma migrate deploy --config prisma.test.config.ts",
+    "db:test:status": "prisma migrate status --config prisma.test.config.ts",
     "db:validate": "prisma validate",
     "dev": "tsx watch src/server.ts",
     "start": "node dist/server.js",
@@ -26,6 +28,7 @@
   "dependencies": {
     "@prisma/adapter-pg": "^7.9.1",
     "@prisma/client": "^7.9.1",
+    "argon2": "^0.45.1",
     "express": "^5.2.1",
     "helmet": "^8.3.0",
     "pg": "^8.22.0",

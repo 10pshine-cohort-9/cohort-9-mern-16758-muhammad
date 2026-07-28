@@ -17,5 +17,23 @@ services:
       retries: 10
       start_period: 10s
 
+  postgres_test:
+    image: postgres:17-alpine@sha256:742f40ea20b9ff2ff31db5458d127452988a2164df9e17441e191f3b72252193
+    profiles: ["test"]
+    environment:
+      POSTGRES_DB: shine_notes_test
+      POSTGRES_USER: shine_notes_test
+      POSTGRES_PASSWORD: shine_notes_test_local
+    ports:
+      - "127.0.0.1:5433:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
 volumes:
   postgres_data:

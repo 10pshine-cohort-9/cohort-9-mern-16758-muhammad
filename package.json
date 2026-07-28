@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "build": "npm run build --workspace @shine-notes/backend",
-    "check": "npm run format:check && npm run lint && npm run db:validate && npm run db:generate && npm run typecheck && npm run test:coverage && npm run build",
+    "check": "npm run format:check && npm run db:validate && npm run db:generate && npm run lint && npm run typecheck && npm run test:coverage && npm run build",
     "db:format": "npm run db:format --workspace @shine-notes/backend",
     "db:generate": "npm run db:generate --workspace @shine-notes/backend",
     "db:migrate:deploy": "npm run db:migrate:deploy --workspace @shine-notes/backend",

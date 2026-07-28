@@ -19,6 +19,23 @@ jobs:
     name: Quality checks
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      DATABASE_URL: postgresql://shine_notes:shine_notes_ci@localhost:5432/shine_notes_test
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: shine_notes_test
+          POSTGRES_USER: shine_notes
+          POSTGRES_PASSWORD: shine_notes_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U shine_notes -d shine_notes_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
 
     steps:
       - name: Check out repository
@@ -34,6 +51,12 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Generate Prisma Client
+        run: npm run db:generate
+
+      - name: Apply database migrations
+        run: npm run db:migrate:deploy
 
       - name: Check formatting
         run: npm run format:check

@@ -4,6 +4,26 @@ import { createDatabaseClient } from "../../src/lib/database.js";
 
 config({ path: ".env.test", quiet: true });
 
+const LOOPBACK_HOSTNAMES = new Set(["localhost", "127.0.0.1", "::1", "[::1]"]);
+
+/** Validates that destructive cleanup targets a loopback test database. */
+export function validateTestDatabaseUrl(connectionString: string): void {
+  const databaseUrl = new URL(connectionString);
+  const databaseName = decodeURIComponent(databaseUrl.pathname.slice(1));
+
+  if (!databaseName.endsWith("_test")) {
+    throw new Error(
+      "Refusing destructive test cleanup outside a database ending in _test.",
+    );
+  }
+
+  if (!LOOPBACK_HOSTNAMES.has(databaseUrl.hostname.toLowerCase())) {
+    throw new Error(
+      "Refusing destructive test cleanup on a non-loopback database host.",
+    );
+  }
+}
+
 function loadTestDatabaseUrl(): string {
   const connectionString = process.env.TEST_DATABASE_URL?.trim();
 
@@ -13,14 +33,7 @@ function loadTestDatabaseUrl(): string {
     );
   }
 
-  const databaseUrl = new URL(connectionString);
-  const databaseName = decodeURIComponent(databaseUrl.pathname.slice(1));
-
-  if (!databaseName.endsWith("_test")) {
-    throw new Error(
-      "Refusing destructive test cleanup outside a database ending in _test.",
-    );
-  }
+  validateTestDatabaseUrl(connectionString);
 
   return connectionString;
 }

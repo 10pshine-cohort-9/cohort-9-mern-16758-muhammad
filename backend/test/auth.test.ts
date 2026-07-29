@@ -20,6 +20,7 @@ import {
   disconnectTestDatabase,
   resetTestDatabase,
   testDatabase,
+  validateTestDatabaseUrl,
 } from "./support/database.js";
 
 const VALID_PASSWORD = "correct horse battery staple";
@@ -186,9 +187,39 @@ describe("authentication domain and persistence", () => {
     });
   });
 
+  describe("test database safety", () => {
+    it("refuses destructive cleanup for unsafe database targets", () => {
+      expect(() => {
+        validateTestDatabaseUrl(
+          "postgresql://user:password@localhost:5432/shine_notes_test",
+        );
+      }).not.to.throw();
+      expect(() => {
+        validateTestDatabaseUrl(
+          "postgresql://user:password@database.example/shine_notes_test",
+        );
+      }).to.throw(
+        "Refusing destructive test cleanup on a non-loopback database host.",
+      );
+      expect(() => {
+        validateTestDatabaseUrl(
+          "postgresql://user:password@localhost:5432/shine_notes",
+        );
+      }).to.throw(
+        "Refusing destructive test cleanup outside a database ending in _test.",
+      );
+    });
+  });
+
   describe("authentication service", () => {
     it("rejects unsafe configuration and malformed login input", async () => {
       expect(() => createService(() => FIXED_NOW, 0)).to.throw(
+        "Session TTL must be between 1 ms and 30 days.",
+      );
+      expect(() =>
+        createService(() => FIXED_NOW, 30 * 24 * 60 * 60 * 1000 + 1),
+      ).to.throw("Session TTL must be between 1 ms and 30 days.");
+      expect(() => createService(() => FIXED_NOW, 1.5)).to.throw(
         "Session TTL must be between 1 ms and 30 days.",
       );
 

@@ -21,6 +21,6 @@
     "skipLibCheck": true,
     "types": ["node", "mocha"]
   },
-  "include": ["src/**/*.ts", "test/**/*.ts"],
+  "include": ["prisma.config.ts", "src/**/*.ts", "test/**/*.ts"],
   "exclude": ["coverage", "dist", "node_modules"]
 }

@@ -54,5 +54,11 @@ export default tseslint.config(
       },
     },
   },
+  {
+    files: ["frontend/**/*.test.{ts,tsx}"],
+    languageOptions: {
+      globals: globals.jest,
+    },
+  },
   eslintConfigPrettier,
 );

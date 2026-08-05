@@ -1,9 +1,9 @@
 import { render, screen } from "@testing-library/react";
 
-import App from "./App";
+import NotesPage from "./NotesPage";
 
-test("shows the page heading", () => {
-  render(<App />);
+test("shows the notes heading", () => {
+  render(<NotesPage />);
 
   expect(
     screen.getByRole("heading", { name: "My notes!" }),

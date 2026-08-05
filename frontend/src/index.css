@@ -1,7 +1,12 @@
 :root {
-  font-family: Arial, sans-serif;
-  color: #1f2937;
-  background: #f3f4f6;
+  font-family:
+    "Cascadia Mono", "Segoe UI Mono", Consolas, "Courier New", monospace;
+  color: #302925;
+  background: #f7f2ee;
+}
+
+* {
+  box-sizing: border-box;
 }
 
 body {
@@ -12,4 +17,5 @@ body {
   min-height: 100vh;
   display: grid;
   place-items: center;
+  padding: 2rem 1rem;
 }

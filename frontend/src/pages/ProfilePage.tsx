@@ -11,9 +11,7 @@ function ProfilePage(): ReactElement {
 
       <section className="profile-content">
         <h1>Your profile</h1>
-        <p className="page-intro">
-          Demo profile.
-        </p>
+        <p className="page-intro">Demo profile.</p>
 
         <div className="profile-row">
           <span>Name</span>

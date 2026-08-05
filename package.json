@@ -5,10 +5,11 @@
   "description": "A secure full-stack notes application for the 10Pearls Shine MERN internship.",
   "type": "module",
   "workspaces": [
-    "backend"
+    "backend",
+    "frontend"
   ],
   "scripts": {
-    "build": "npm run build --workspace @shine-notes/backend",
+    "build": "npm run build --workspace @shine-notes/backend && npm run build --workspace @shine-notes/frontend",
     "check": "npm run format:check && npm run db:validate && npm run db:generate && npm run lint && npm run typecheck && npm run test:coverage && npm run build",
     "db:format": "npm run db:format --workspace @shine-notes/backend",
     "db:generate": "npm run db:generate --workspace @shine-notes/backend",
@@ -18,13 +19,14 @@
     "db:studio": "npm run db:studio --workspace @shine-notes/backend",
     "db:validate": "npm run db:validate --workspace @shine-notes/backend",
     "dev:backend": "npm run dev --workspace @shine-notes/backend",
-    "format": "prettier --write .coderabbit.yaml .github compose.yaml eslint.config.js package.json backend README.md && npm run db:format",
-    "format:check": "prettier --check .coderabbit.yaml .github compose.yaml eslint.config.js package.json backend README.md",
+    "dev:frontend": "npm run dev --workspace @shine-notes/frontend",
+    "format": "prettier --write .coderabbit.yaml .github compose.yaml eslint.config.js package.json backend frontend README.md && npm run db:format",
+    "format:check": "prettier --check .coderabbit.yaml .github compose.yaml eslint.config.js package.json backend frontend README.md",
     "lint": "eslint . --max-warnings=0",
     "start:backend": "npm run start --workspace @shine-notes/backend",
-    "test": "npm run test --workspace @shine-notes/backend",
-    "test:coverage": "npm run test:coverage --workspace @shine-notes/backend",
-    "typecheck": "npm run typecheck --workspace @shine-notes/backend"
+    "test": "npm run test --workspace @shine-notes/backend && npm run test --workspace @shine-notes/frontend",
+    "test:coverage": "npm run test:coverage --workspace @shine-notes/backend && npm run test:coverage --workspace @shine-notes/frontend",
+    "typecheck": "npm run typecheck --workspace @shine-notes/backend && npm run typecheck --workspace @shine-notes/frontend"
   },
   "engines": {
     "node": ">=22.16.0",
@@ -32,6 +34,9 @@
   },
   "packageManager": "npm@10.9.2",
   "overrides": {
+    "minimatch@^10.0.0": {
+      "brace-expansion": "5.0.9"
+    },
     "diff": "8.0.3",
     "glob": "13.0.6",
     "serialize-javascript": "7.0.5"

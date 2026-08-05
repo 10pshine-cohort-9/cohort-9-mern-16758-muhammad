@@ -40,5 +40,25 @@ export default tseslint.config(
       "@typescript-eslint/no-import-type-side-effects": "error",
     },
   },
+  {
+    files: ["frontend/**/*.{ts,tsx}"],
+    extends: [
+      eslint.configs.recommended,
+      ...tseslint.configs.recommendedTypeChecked,
+    ],
+    languageOptions: {
+      globals: globals.browser,
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
+  {
+    files: ["frontend/**/*.test.{ts,tsx}"],
+    languageOptions: {
+      globals: globals.jest,
+    },
+  },
   eslintConfigPrettier,
 );

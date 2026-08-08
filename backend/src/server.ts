@@ -1,10 +1,16 @@
+import "dotenv/config";
+
 import { createServer, type Server } from "node:http";
 
 import pino, { type Logger } from "pino";
 
 import { createApp } from "./app.js";
+import { AuthenticationService } from "./auth/auth-service.js";
 import { loadEnvironment } from "./config/env.js";
+import { createDatabaseClient } from "./lib/database.js";
 import { createLogger } from "./lib/logger.js";
+import { PrismaAuthenticationRepository } from "./repositories/auth-repository.js";
+import { createAuthRouter } from "./routes/auth-routes.js";
 
 function listen(server: Server, port: number, host: string): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -75,7 +81,31 @@ async function main(): Promise<void> {
     level: environment.LOG_LEVEL,
     pretty: environment.NODE_ENV === "development",
   });
-  const server = createServer(createApp({ logger }));
+  const database = createDatabaseClient(environment.DATABASE_URL);
+  const authenticationRepository = new PrismaAuthenticationRepository(database);
+  const authenticationService = new AuthenticationService(
+    authenticationRepository,
+  );
+  const app = createApp({
+    logger,
+    registerRoutes(expressApp) {
+      expressApp.use(
+        "/api/auth",
+        createAuthRouter(
+          authenticationService,
+          environment.NODE_ENV === "production",
+        ),
+      );
+    },
+  });
+  const server = createServer(app);
+
+  server.once("close", () => {
+    void database.$disconnect().catch((error: unknown) => {
+      logger.error({ err: error }, "Database failed to disconnect cleanly");
+      process.exitCode = 1;
+    });
+  });
 
   await listen(server, environment.PORT, environment.HOST);
   registerShutdownHandlers(server, logger, environment.SHUTDOWN_TIMEOUT_MS);

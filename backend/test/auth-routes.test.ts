@@ -23,7 +23,7 @@ const authenticationResult: AuthenticationResult = {
     name: "Umer",
   },
   sessionToken: "test-session-token",
-  expiresAt: new Date("2026-08-15T12:00:00.000Z"),
+  expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
 };
 
 function createSilentLogger(): Logger {

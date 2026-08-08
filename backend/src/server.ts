@@ -26,14 +26,28 @@ function listen(server: Server, port: number, host: string): Promise<void> {
   });
 }
 
+function closeServer(server: Server): Promise<void> {
+  return new Promise((resolve, reject) => {
+    server.close((error) => {
+      if (error !== undefined) {
+        reject(error);
+        return;
+      }
+
+      resolve();
+    });
+  });
+}
+
 function registerShutdownHandlers(
   server: Server,
   logger: Logger,
   timeoutMs: number,
+  disconnectDatabase: () => Promise<void>,
 ): void {
   let shuttingDown = false;
 
-  const shutdown = (signal: NodeJS.Signals): void => {
+  const shutdown = async (signal: NodeJS.Signals): Promise<void> => {
     if (shuttingDown) {
       return;
     }
@@ -54,24 +68,29 @@ function registerShutdownHandlers(
     }, timeoutMs);
     timeout.unref();
 
-    server.close((error) => {
-      clearTimeout(timeout);
-
-      if (error !== undefined) {
-        logger.error({ err: error }, "HTTP server failed to close cleanly");
-        process.exitCode = 1;
-        return;
-      }
-
+    try {
+      await closeServer(server);
       logger.info("HTTP server stopped");
-    });
+    } catch (error: unknown) {
+      logger.error({ err: error }, "HTTP server failed to close cleanly");
+      process.exitCode = 1;
+    }
+
+    try {
+      await disconnectDatabase();
+    } catch (error: unknown) {
+      logger.error({ err: error }, "Database failed to disconnect cleanly");
+      process.exitCode = 1;
+    }
+
+    clearTimeout(timeout);
   };
 
   process.once("SIGINT", () => {
-    shutdown("SIGINT");
+    void shutdown("SIGINT");
   });
   process.once("SIGTERM", () => {
-    shutdown("SIGTERM");
+    void shutdown("SIGTERM");
   });
 }
 
@@ -100,15 +119,24 @@ async function main(): Promise<void> {
   });
   const server = createServer(app);
 
-  server.once("close", () => {
-    void database.$disconnect().catch((error: unknown) => {
-      logger.error({ err: error }, "Database failed to disconnect cleanly");
-      process.exitCode = 1;
+  try {
+    await listen(server, environment.PORT, environment.HOST);
+  } catch (error: unknown) {
+    await database.$disconnect().catch((disconnectError: unknown) => {
+      logger.error(
+        { err: disconnectError },
+        "Database failed to disconnect after startup failure",
+      );
     });
-  });
+    throw error;
+  }
 
-  await listen(server, environment.PORT, environment.HOST);
-  registerShutdownHandlers(server, logger, environment.SHUTDOWN_TIMEOUT_MS);
+  registerShutdownHandlers(
+    server,
+    logger,
+    environment.SHUTDOWN_TIMEOUT_MS,
+    () => database.$disconnect(),
+  );
 
   logger.info(
     {

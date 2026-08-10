@@ -12,6 +12,8 @@ import {
 } from "../src/config/env.js";
 import { createLogger } from "../src/lib/logger.js";
 
+const TEST_DATABASE_URL = "postgresql://user:password@localhost:5432/notes";
+
 function createSilentLogger(): Logger {
   return createLogger({ level: "silent" });
 }
@@ -132,7 +134,7 @@ describe("application foundation", () => {
 
 describe("environment configuration", () => {
   it("provides safe development defaults", () => {
-    const environment = loadEnvironment({});
+    const environment = loadEnvironment({ DATABASE_URL: TEST_DATABASE_URL });
 
     expect(environment).to.deep.equal({
       NODE_ENV: "development",
@@ -140,6 +142,7 @@ describe("environment configuration", () => {
       PORT: 3000,
       LOG_LEVEL: "info",
       SHUTDOWN_TIMEOUT_MS: 10_000,
+      DATABASE_URL: TEST_DATABASE_URL,
     });
   });
 
@@ -148,7 +151,10 @@ describe("environment configuration", () => {
     let caughtError: unknown;
 
     try {
-      loadEnvironment({ PORT: invalidPort });
+      loadEnvironment({
+        DATABASE_URL: TEST_DATABASE_URL,
+        PORT: invalidPort,
+      });
     } catch (error: unknown) {
       caughtError = error;
     }

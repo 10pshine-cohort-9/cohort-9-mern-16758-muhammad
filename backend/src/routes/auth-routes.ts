@@ -20,7 +20,7 @@ export interface AuthRouteService {
   logout(sessionToken: string): Promise<void>;
 }
 
-function getSessionToken(request: Request): string | null {
+export function getSessionToken(request: Request): string | null {
   const sessionToken: unknown = request.cookies[SESSION_COOKIE_NAME];
 
   if (typeof sessionToken === "string") {

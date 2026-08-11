@@ -9,8 +9,11 @@ import { AuthenticationService } from "./auth/auth-service.js";
 import { loadEnvironment } from "./config/env.js";
 import { createDatabaseClient } from "./lib/database.js";
 import { createLogger } from "./lib/logger.js";
+import { NoteService } from "./notes/note-service.js";
 import { PrismaAuthenticationRepository } from "./repositories/auth-repository.js";
+import { NoteRepository } from "./repositories/note-repository.js";
 import { createAuthRouter } from "./routes/auth-routes.js";
+import { createNoteRouter } from "./routes/note-routes.js";
 
 function listen(server: Server, port: number, host: string): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -105,6 +108,8 @@ async function main(): Promise<void> {
   const authenticationService = new AuthenticationService(
     authenticationRepository,
   );
+  const noteRepository = new NoteRepository(database);
+  const noteService = new NoteService(noteRepository);
   const app = createApp({
     logger,
     registerRoutes(expressApp) {
@@ -114,6 +119,10 @@ async function main(): Promise<void> {
           authenticationService,
           environment.NODE_ENV === "production",
         ),
+      );
+      expressApp.use(
+        "/api/notes",
+        createNoteRouter(authenticationService, noteService),
       );
     },
   });

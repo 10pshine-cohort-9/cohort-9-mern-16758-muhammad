@@ -1,13 +1,23 @@
 import { useState, type FormEvent, type ReactElement } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
-function SignupPage(): ReactElement {
+import { registerUser, type AuthenticatedUser } from "../auth-api";
+
+interface SignupPageProps {
+  onAuthenticated: (user: AuthenticatedUser) => void;
+}
+
+function SignupPage({ onAuthenticated }: SignupPageProps): ReactElement {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const navigate = useNavigate();
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>): void {
+  async function handleSubmit(
+    event: FormEvent<HTMLFormElement>,
+  ): Promise<void> {
     event.preventDefault();
 
     if (!name.trim() || !email.trim() || !password) {
@@ -16,6 +26,21 @@ function SignupPage(): ReactElement {
     }
 
     setError("");
+    setSubmitting(true);
+
+    try {
+      const user = await registerUser(name.trim(), email.trim(), password);
+      onAuthenticated(user);
+      void navigate("/notes");
+    } catch (requestError: unknown) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Unable to create your account.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -24,7 +49,7 @@ function SignupPage(): ReactElement {
       <h1>Create your account</h1>
       <p className="page-intro">Keep your notes together in one place.</p>
 
-      <form onSubmit={handleSubmit} noValidate>
+      <form onSubmit={(event) => void handleSubmit(event)} noValidate>
         <label htmlFor="name">Name</label>
         <input
           id="name"
@@ -55,8 +80,8 @@ function SignupPage(): ReactElement {
           </p>
         )}
 
-        <button className="primary-button" type="submit">
-          Create account
+        <button className="primary-button" type="submit" disabled={submitting}>
+          {submitting ? "Creating account..." : "Create account"}
         </button>
       </form>
 

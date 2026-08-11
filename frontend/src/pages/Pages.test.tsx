@@ -20,7 +20,7 @@ test("shows the notes heading", () => {
 test("shows an error when the login form is empty", () => {
   render(
     <MemoryRouter>
-      <LoginPage />
+      <LoginPage onAuthenticated={jest.fn()} />
     </MemoryRouter>,
   );
 
@@ -34,7 +34,7 @@ test("shows an error when the login form is empty", () => {
 test("shows an error when the signup form is empty", () => {
   render(
     <MemoryRouter>
-      <SignupPage />
+      <SignupPage onAuthenticated={jest.fn()} />
     </MemoryRouter>,
   );
 

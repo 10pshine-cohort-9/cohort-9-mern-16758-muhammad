@@ -41,15 +41,18 @@ test("redirects a logged-out user to login", async () => {
 });
 
 test("logs in and opens the notes page", async () => {
-  fetchMock.mockResolvedValueOnce(mockResponse(401)).mockResolvedValueOnce(
-    mockResponse(200, {
-      user: {
-        id: "user-1",
-        name: "Umer",
-        email: "umer@example.com",
-      },
-    }),
-  );
+  fetchMock
+    .mockResolvedValueOnce(mockResponse(401))
+    .mockResolvedValueOnce(
+      mockResponse(200, {
+        user: {
+          id: "user-1",
+          name: "Umer",
+          email: "umer@example.com",
+        },
+      }),
+    )
+    .mockResolvedValueOnce(mockResponse(200, { notes: [] }));
 
   renderApp("/login");
 
@@ -65,22 +68,25 @@ test("logs in and opens the notes page", async () => {
   expect(
     await screen.findByRole("heading", { name: "My notes!" }),
   ).toBeInTheDocument();
-  expect(fetchMock).toHaveBeenLastCalledWith(
+  expect(fetchMock).toHaveBeenCalledWith(
     "/api/auth/login",
     expect.objectContaining({ method: "POST" }),
   );
 });
 
 test("creates an account and opens the notes page", async () => {
-  fetchMock.mockResolvedValueOnce(mockResponse(401)).mockResolvedValueOnce(
-    mockResponse(201, {
-      user: {
-        id: "user-1",
-        name: "Umer",
-        email: "umer@example.com",
-      },
-    }),
-  );
+  fetchMock
+    .mockResolvedValueOnce(mockResponse(401))
+    .mockResolvedValueOnce(
+      mockResponse(201, {
+        user: {
+          id: "user-1",
+          name: "Umer",
+          email: "umer@example.com",
+        },
+      }),
+    )
+    .mockResolvedValueOnce(mockResponse(200, { notes: [] }));
 
   renderApp("/signup");
 
@@ -99,7 +105,7 @@ test("creates an account and opens the notes page", async () => {
   expect(
     await screen.findByRole("heading", { name: "My notes!" }),
   ).toBeInTheDocument();
-  expect(fetchMock).toHaveBeenLastCalledWith(
+  expect(fetchMock).toHaveBeenCalledWith(
     "/api/auth/register",
     expect.objectContaining({ method: "POST" }),
   );

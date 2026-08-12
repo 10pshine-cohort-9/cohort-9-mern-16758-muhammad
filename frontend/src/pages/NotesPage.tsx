@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent, type ReactElement } from "react";
 import { Link } from "react-router-dom";
 
-import { getNotes, type Note } from "../notes-api";
+import { deleteNote, getNotes, type Note } from "../notes-api";
 
 function NotesPage(): ReactElement {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -39,6 +39,25 @@ function NotesPage(): ReactElement {
 
     setActiveSearch(cleanedSearch);
     void loadNotes(cleanedSearch);
+  }
+
+  async function handleDelete(note: Note): Promise<void> {
+    const confirmed = window.confirm(`Delete "${note.title}"?`);
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await deleteNote(note.id);
+      await loadNotes(activeSearch);
+    } catch (requestError: unknown) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Unable to delete the note.",
+      );
+    }
   }
 
   return (
@@ -105,6 +124,14 @@ function NotesPage(): ReactElement {
             <article className="note-card" key={note.id}>
               <h2>{note.title}</h2>
               <p>{note.content || "No content"}</p>
+              <div className="note-actions">
+                <Link className="secondary-link" to={`/notes/${note.id}/edit`}>
+                  Edit
+                </Link>
+                <button type="button" onClick={() => void handleDelete(note)}>
+                  Delete
+                </button>
+              </div>
             </article>
           ))}
         </section>

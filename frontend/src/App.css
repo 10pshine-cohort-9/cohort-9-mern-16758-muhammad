@@ -182,6 +182,12 @@ button:disabled {
   white-space: pre-wrap;
 }
 
+.note-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
 .empty-state {
   display: grid;
   justify-items: center;

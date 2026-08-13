@@ -151,6 +151,43 @@ button:disabled {
   margin-top: 2rem;
 }
 
+.search-form {
+  margin-bottom: 1.5rem;
+}
+
+.search-controls {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.search-controls input {
+  flex: 1;
+}
+
+.notes-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.note-card {
+  padding: 1.25rem;
+  background: #fbf8f5;
+  border: 1px solid #e5d8d1;
+  border-radius: 0.65rem;
+}
+
+.note-card p {
+  margin: 0.5rem 0 0;
+  color: #756a65;
+  white-space: pre-wrap;
+}
+
+.note-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
 .empty-state {
   display: grid;
   justify-items: center;
@@ -248,8 +285,13 @@ button:disabled {
   }
 
   .top-bar,
+  .search-controls,
   .profile-row {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .search-controls button {
+    width: 100%;
   }
 }

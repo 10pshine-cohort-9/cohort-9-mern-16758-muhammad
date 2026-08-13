@@ -1,7 +1,85 @@
-import type { ReactElement } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactElement,
+} from "react";
 import { Link } from "react-router-dom";
 
+import { deleteNote, getNotes, type Note } from "../notes-api";
+
 function NotesPage(): ReactElement {
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [search, setSearch] = useState("");
+  const [activeSearch, setActiveSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const latestRequest = useRef(0);
+
+  async function loadNotes(searchValue: string): Promise<void> {
+    const requestNumber = latestRequest.current + 1;
+    latestRequest.current = requestNumber;
+    setLoading(true);
+    setError("");
+
+    try {
+      const savedNotes = await getNotes(searchValue);
+
+      if (requestNumber !== latestRequest.current) {
+        return;
+      }
+
+      setNotes(savedNotes);
+    } catch (requestError: unknown) {
+      if (requestNumber !== latestRequest.current) {
+        return;
+      }
+
+      setNotes([]);
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Unable to load your notes.",
+      );
+    } finally {
+      if (requestNumber === latestRequest.current) {
+        setLoading(false);
+      }
+    }
+  }
+
+  useEffect(() => {
+    void loadNotes("");
+  }, []);
+
+  function handleSearch(event: FormEvent<HTMLFormElement>): void {
+    event.preventDefault();
+    const cleanedSearch = search.trim();
+
+    setActiveSearch(cleanedSearch);
+    void loadNotes(cleanedSearch);
+  }
+
+  async function handleDelete(note: Note): Promise<void> {
+    const confirmed = window.confirm(`Delete "${note.title}"?`);
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await deleteNote(note.id);
+      await loadNotes(activeSearch);
+    } catch (requestError: unknown) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Unable to delete the note.",
+      );
+    }
+  }
+
   return (
     <main className="dashboard-page">
       <nav className="top-bar">
@@ -19,16 +97,68 @@ function NotesPage(): ReactElement {
         <p className="page-intro">Your saved notes will appear here.</p>
       </section>
 
-      <section className="empty-state">
-        <span className="empty-state-icon" aria-hidden="true">
-          Aa
-        </span>
-        <h2>No notes yet</h2>
-        <p>Write down your first idea, reminder, or thought.</p>
-        <Link className="primary-link" to="/notes/new">
-          Create your first note
-        </Link>
-      </section>
+      <form className="search-form" onSubmit={handleSearch} role="search">
+        <label htmlFor="note-search">Search notes</label>
+        <div className="search-controls">
+          <input
+            id="note-search"
+            type="search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search by title or content"
+            disabled={loading}
+          />
+          <button type="submit" disabled={loading}>
+            Search
+          </button>
+        </div>
+      </form>
+
+      {loading && <p>Loading notes...</p>}
+
+      {error && (
+        <p className="error" role="alert">
+          {error}
+        </p>
+      )}
+
+      {!loading && !error && notes.length === 0 && (
+        <section className="empty-state">
+          <span className="empty-state-icon" aria-hidden="true">
+            Aa
+          </span>
+          <h2>{activeSearch ? "No matching notes" : "No notes yet"}</h2>
+          <p>
+            {activeSearch
+              ? "Try searching for something else."
+              : "Write down your first idea, reminder, or thought."}
+          </p>
+          {!activeSearch && (
+            <Link className="primary-link" to="/notes/new">
+              Create your first note
+            </Link>
+          )}
+        </section>
+      )}
+
+      {!loading && !error && notes.length > 0 && (
+        <section className="notes-list" aria-label="Saved notes">
+          {notes.map((note) => (
+            <article className="note-card" key={note.id}>
+              <h2>{note.title}</h2>
+              <p>{note.content || "No content"}</p>
+              <div className="note-actions">
+                <Link className="secondary-link" to={`/notes/${note.id}/edit`}>
+                  Edit
+                </Link>
+                <button type="button" onClick={() => void handleDelete(note)}>
+                  Delete
+                </button>
+              </div>
+            </article>
+          ))}
+        </section>
+      )}
     </main>
   );
 }

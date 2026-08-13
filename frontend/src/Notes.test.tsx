@@ -80,6 +80,38 @@ test("loads and searches notes", async () => {
   expect(fetchMock).toHaveBeenLastCalledWith("/api/notes?search=meeting");
 });
 
+test("shows an error for an invalid notes response", async () => {
+  fetchMock.mockResolvedValueOnce(mockResponse(200, { notes: {} }));
+
+  render(
+    <MemoryRouter>
+      <NotesPage />
+    </MemoryRouter>,
+  );
+
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "The server returned an invalid response.",
+  );
+});
+
+test("shows a simple error when a notes response is not JSON", async () => {
+  fetchMock.mockResolvedValueOnce({
+    ok: true,
+    status: 200,
+    json: jest.fn().mockRejectedValue(new SyntaxError("Invalid JSON")),
+  } as unknown as Response);
+
+  render(
+    <MemoryRouter>
+      <NotesPage />
+    </MemoryRouter>,
+  );
+
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "Unable to load your notes.",
+  );
+});
+
 test("creates a note", async () => {
   fetchMock.mockResolvedValueOnce(
     mockResponse(201, {
@@ -150,6 +182,22 @@ test("edits a note", async () => {
     "/api/notes/note-1",
     expect.objectContaining({ method: "PUT" }),
   );
+});
+
+test("hides the editor when a note fails to load", async () => {
+  fetchMock.mockResolvedValueOnce(
+    mockResponse(404, { error: { message: "Note not found." } }),
+  );
+
+  renderEditor("/notes/note-1/edit");
+
+  expect(await screen.findByRole("alert")).toHaveTextContent("Note not found.");
+  expect(
+    screen.queryByRole("button", { name: "Save" }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.getByRole("link", { name: "Back to notes" }),
+  ).toBeInTheDocument();
 });
 
 test("deletes a note", async () => {

@@ -1,4 +1,10 @@
-import { useEffect, useState, type FormEvent, type ReactElement } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactElement,
+} from "react";
 import { Link } from "react-router-dom";
 
 import { deleteNote, getNotes, type Note } from "../notes-api";
@@ -9,15 +15,27 @@ function NotesPage(): ReactElement {
   const [activeSearch, setActiveSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const latestRequest = useRef(0);
 
   async function loadNotes(searchValue: string): Promise<void> {
+    const requestNumber = latestRequest.current + 1;
+    latestRequest.current = requestNumber;
     setLoading(true);
     setError("");
 
     try {
       const savedNotes = await getNotes(searchValue);
+
+      if (requestNumber !== latestRequest.current) {
+        return;
+      }
+
       setNotes(savedNotes);
     } catch (requestError: unknown) {
+      if (requestNumber !== latestRequest.current) {
+        return;
+      }
+
       setNotes([]);
       setError(
         requestError instanceof Error
@@ -25,7 +43,9 @@ function NotesPage(): ReactElement {
           : "Unable to load your notes.",
       );
     } finally {
-      setLoading(false);
+      if (requestNumber === latestRequest.current) {
+        setLoading(false);
+      }
     }
   }
 
@@ -86,8 +106,11 @@ function NotesPage(): ReactElement {
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search by title or content"
+            disabled={loading}
           />
-          <button type="submit">Search</button>
+          <button type="submit" disabled={loading}>
+            Search
+          </button>
         </div>
       </form>
 

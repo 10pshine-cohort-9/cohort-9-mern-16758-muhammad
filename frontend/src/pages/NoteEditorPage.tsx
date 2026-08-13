@@ -9,6 +9,7 @@ function NoteEditorPage(): ReactElement {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(Boolean(noteId));
+  const [loadFailed, setLoadFailed] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const heading = noteId ? "Edit note" : "Create note";
@@ -26,6 +27,7 @@ function NoteEditorPage(): ReactElement {
         setTitle(savedNote.title);
         setContent(savedNote.content);
       } catch (requestError: unknown) {
+        setLoadFailed(true);
         setError(
           requestError instanceof Error
             ? requestError.message
@@ -73,6 +75,17 @@ function NoteEditorPage(): ReactElement {
 
   if (loading) {
     return <main>Loading note...</main>;
+  }
+
+  if (loadFailed) {
+    return (
+      <main className="editor-page">
+        <p className="error" role="alert">
+          {error}
+        </p>
+        <Link to="/notes">Back to notes</Link>
+      </main>
+    );
   }
 
   return (

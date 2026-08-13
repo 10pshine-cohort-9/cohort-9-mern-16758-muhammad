@@ -228,9 +228,66 @@ button:disabled {
   font-weight: 700;
 }
 
-.note-content-input {
+.rich-text-editor {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.editor-label {
+  font-weight: 600;
+}
+
+.rich-text-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.65rem;
+  background: #f5ece7;
+  border: 1px solid #d9c8bf;
+  border-radius: 0.4rem 0.4rem 0 0;
+}
+
+.rich-text-toolbar button {
+  padding: 0.4rem 0.6rem;
+  color: #5f4e47;
+  background: #fffdfb;
+  border-color: #d9c8bf;
+}
+
+.rich-text-toolbar button:hover,
+.rich-text-toolbar button.active {
+  color: white;
+  background: #8b6252;
+  border-color: #8b6252;
+}
+
+.rich-text-toolbar button:disabled {
+  color: #91847e;
+  background: #e7ded9;
+  border-color: #e7ded9;
+}
+
+.rich-text-content {
+  min-height: 15rem;
+  padding: 1rem;
   line-height: 1.7;
-  resize: vertical;
+  background: white;
+  border: 1px solid #cdbdb5;
+  border-radius: 0 0 0.4rem 0.4rem;
+  outline: none;
+}
+
+.rich-text-content:focus {
+  border-color: #8b6252;
+  outline: 3px solid rgb(139 98 82 / 15%);
+}
+
+.rich-text-content > :first-child {
+  margin-top: 0;
+}
+
+.rich-text-content > :last-child {
+  margin-bottom: 0;
 }
 
 .profile-row {

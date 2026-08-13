@@ -45,6 +45,7 @@ test("loads and searches notes", async () => {
             id: "note-1",
             title: "Shopping list",
             content: "Buy milk",
+            plainText: "Buy milk",
             updatedAt: "2026-08-13T10:00:00.000Z",
           },
         ],
@@ -57,6 +58,7 @@ test("loads and searches notes", async () => {
             id: "note-2",
             title: "Meeting notes",
             content: "Discuss the project",
+            plainText: "Discuss the project",
             updatedAt: "2026-08-13T11:00:00.000Z",
           },
         ],
@@ -119,6 +121,7 @@ test("creates a note", async () => {
         id: "note-1",
         title: "New idea",
         content: "Build a notes app",
+        plainText: "Build a notes app",
         updatedAt: "2026-08-13T10:00:00.000Z",
       },
     }),
@@ -128,9 +131,6 @@ test("creates a note", async () => {
 
   fireEvent.change(screen.getByLabelText("Title"), {
     target: { value: "New idea" },
-  });
-  fireEvent.change(screen.getByLabelText("Content"), {
-    target: { value: "Build a notes app" },
   });
   fireEvent.click(screen.getByRole("button", { name: "Save" }));
 
@@ -151,6 +151,7 @@ test("edits a note", async () => {
           id: "note-1",
           title: "Old title",
           content: "Old content",
+          plainText: "Old content",
           updatedAt: "2026-08-13T10:00:00.000Z",
         },
       }),
@@ -161,6 +162,7 @@ test("edits a note", async () => {
           id: "note-1",
           title: "Updated title",
           content: "Updated content",
+          plainText: "Updated content",
           updatedAt: "2026-08-13T11:00:00.000Z",
         },
       }),
@@ -170,9 +172,6 @@ test("edits a note", async () => {
 
   const titleInput = await screen.findByLabelText("Title");
   fireEvent.change(titleInput, { target: { value: "Updated title" } });
-  fireEvent.change(screen.getByLabelText("Content"), {
-    target: { value: "Updated content" },
-  });
   fireEvent.click(screen.getByRole("button", { name: "Save" }));
 
   expect(
@@ -210,6 +209,7 @@ test("deletes a note", async () => {
             id: "note-1",
             title: "Delete me",
             content: "Temporary note",
+            plainText: "Temporary note",
             updatedAt: "2026-08-13T10:00:00.000Z",
           },
         ],

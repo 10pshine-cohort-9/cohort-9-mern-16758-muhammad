@@ -1,13 +1,20 @@
+import type { JSONContent } from "@tiptap/react";
 import { useEffect, useState, type FormEvent, type ReactElement } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 
-import { createNote, getNote, updateNote } from "../notes-api";
+import RichTextEditor from "../components/RichTextEditor";
+import {
+  createNote,
+  emptyNoteContent,
+  getNote,
+  updateNote,
+} from "../notes-api";
 
 function NoteEditorPage(): ReactElement {
   const { noteId } = useParams();
   const navigate = useNavigate();
   const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
+  const [content, setContent] = useState<JSONContent>(emptyNoteContent);
   const [loading, setLoading] = useState(Boolean(noteId));
   const [loadFailed, setLoadFailed] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -114,14 +121,11 @@ function NoteEditorPage(): ReactElement {
           onChange={(event) => setTitle(event.target.value)}
         />
 
-        <label htmlFor="content">Content</label>
-        <textarea
-          className="note-content-input"
-          id="content"
-          rows={12}
-          placeholder="Start typing here..."
-          value={content}
-          onChange={(event) => setContent(event.target.value)}
+        <RichTextEditor
+          content={content}
+          disabled={saving}
+          autoFocus={!noteId}
+          onChange={setContent}
         />
 
         {error && (

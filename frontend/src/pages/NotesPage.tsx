@@ -146,7 +146,7 @@ function NotesPage(): ReactElement {
           {notes.map((note) => (
             <article className="note-card" key={note.id}>
               <h2>{note.title}</h2>
-              <p>{note.content || "No content"}</p>
+              <p>{note.plainText || "No content"}</p>
               <div className="note-actions">
                 <Link className="secondary-link" to={`/notes/${note.id}/edit`}>
                   Edit

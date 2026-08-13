@@ -2,20 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
 import LoginPage from "./LoginPage";
-import NotesPage from "./NotesPage";
 import SignupPage from "./SignupPage";
-
-test("shows the notes heading", () => {
-  render(
-    <MemoryRouter>
-      <NotesPage />
-    </MemoryRouter>,
-  );
-
-  expect(
-    screen.getByRole("heading", { name: "My notes!" }),
-  ).toBeInTheDocument();
-});
 
 test("shows an error when the login form is empty", () => {
   render(

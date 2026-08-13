@@ -22,7 +22,8 @@ interface NoteResponse {
   note: {
     id: string;
     title: string;
-    content: string;
+    content: unknown;
+    plainText: string;
     version: number;
   };
 }
@@ -31,8 +32,20 @@ interface NotesResponse {
   notes: {
     id: string;
     title: string;
-    content: string;
+    content: unknown;
   }[];
+}
+
+function richText(text: string): Record<string, unknown> {
+  return {
+    type: "doc",
+    content: [
+      {
+        type: "paragraph",
+        content: text ? [{ type: "text", text }] : [],
+      },
+    ],
+  };
 }
 
 function createTestApp(): Express {
@@ -117,18 +130,24 @@ describe("notes API", () => {
       .set("Cookie", cookie)
       .send({
         title: "  Project ideas  ",
-        content: "Prepare notes for the meeting.",
+        content: richText("Prepare notes for the meeting."),
       });
     const created = createResponse.body as NoteResponse;
 
     expect(createResponse.status).to.equal(201);
     expect(created.note.title).to.equal("Project ideas");
-    expect(created.note.content).to.equal("Prepare notes for the meeting.");
+    expect(created.note.content).to.deep.equal(
+      richText("Prepare notes for the meeting."),
+    );
+    expect(created.note.plainText).to.equal("Prepare notes for the meeting.");
 
-    await request(app).post("/api/notes").set("Cookie", cookie).send({
-      title: "Shopping list",
-      content: "Milk and bread",
-    });
+    await request(app)
+      .post("/api/notes")
+      .set("Cookie", cookie)
+      .send({
+        title: "Shopping list",
+        content: richText("Milk and bread"),
+      });
 
     const listResponse = await request(app)
       .get("/api/notes")
@@ -152,7 +171,10 @@ describe("notes API", () => {
     const updateResponse = await request(app)
       .put(`/api/notes/${created.note.id}`)
       .set("Cookie", cookie)
-      .send({ title: "Updated ideas", content: "Updated content" });
+      .send({
+        title: "Updated ideas",
+        content: richText("Updated content"),
+      });
     const updated = updateResponse.body as NoteResponse;
     expect(updateResponse.status).to.equal(200);
     expect(updated.note.title).to.equal("Updated ideas");
@@ -179,7 +201,7 @@ describe("notes API", () => {
     const createResponse = await request(app)
       .post("/api/notes")
       .set("Cookie", `shine_session=${firstSession}`)
-      .send({ title: "Private note", content: "Only for the owner" });
+      .send({ title: "Private note", content: richText("Only for the owner") });
     const created = createResponse.body as NoteResponse;
 
     const getResponse = await request(app)
@@ -188,7 +210,7 @@ describe("notes API", () => {
     const updateResponse = await request(app)
       .put(`/api/notes/${created.note.id}`)
       .set("Cookie", `shine_session=${secondSession}`)
-      .send({ title: "Changed", content: "Changed" });
+      .send({ title: "Changed", content: richText("Changed") });
     const deleteResponse = await request(app)
       .delete(`/api/notes/${created.note.id}`)
       .set("Cookie", `shine_session=${secondSession}`);
@@ -212,7 +234,11 @@ describe("notes API", () => {
     const missingTitle = await request(app)
       .post("/api/notes")
       .set("Cookie", cookie)
-      .send({ content: "Content without a title" });
+      .send({ content: richText("Content without a title") });
+    const invalidContent = await request(app)
+      .post("/api/notes")
+      .set("Cookie", cookie)
+      .send({ title: "Invalid content", content: "Plain text" });
     const invalidId = await request(app)
       .get("/api/notes/not-a-uuid")
       .set("Cookie", cookie);
@@ -221,6 +247,7 @@ describe("notes API", () => {
       .set("Cookie", cookie);
 
     expect(missingTitle.status).to.equal(400);
+    expect(invalidContent.status).to.equal(400);
     expect(invalidId.status).to.equal(400);
     expect(longSearch.status).to.equal(400);
   });

@@ -19,6 +19,11 @@ function mockResponse(status: number, body?: unknown): Response {
   } as unknown as Response;
 }
 
+function readRequestBody(options: RequestInit | undefined): unknown {
+  expect(typeof options?.body).toBe("string");
+  return JSON.parse(options?.body as string) as unknown;
+}
+
 function renderEditor(path: string): void {
   render(
     <MemoryRouter initialEntries={[path]}>
@@ -132,6 +137,12 @@ test("creates a note", async () => {
   fireEvent.change(screen.getByLabelText("Title"), {
     target: { value: "New idea" },
   });
+
+  expect(screen.getByRole("button", { name: "Bold" })).toBeInTheDocument();
+  expect(
+    screen.getByRole("button", { name: "Bullet list" }),
+  ).toBeInTheDocument();
+
   fireEvent.click(screen.getByRole("button", { name: "Save" }));
 
   expect(
@@ -141,6 +152,15 @@ test("creates a note", async () => {
     "/api/notes",
     expect.objectContaining({ method: "POST" }),
   );
+
+  const createOptions = fetchMock.mock.calls[0]?.[1];
+  expect(readRequestBody(createOptions)).toEqual({
+    title: "New idea",
+    content: {
+      type: "doc",
+      content: [{ type: "paragraph" }],
+    },
+  });
 });
 
 test("edits a note", async () => {
@@ -171,6 +191,8 @@ test("edits a note", async () => {
   renderEditor("/notes/note-1/edit");
 
   const titleInput = await screen.findByLabelText("Title");
+  expect(screen.getByLabelText("Content")).toHaveTextContent("Old content");
+
   fireEvent.change(titleInput, { target: { value: "Updated title" } });
   fireEvent.click(screen.getByRole("button", { name: "Save" }));
 
@@ -181,6 +203,20 @@ test("edits a note", async () => {
     "/api/notes/note-1",
     expect.objectContaining({ method: "PUT" }),
   );
+
+  const updateOptions = fetchMock.mock.calls[1]?.[1];
+  expect(readRequestBody(updateOptions)).toEqual({
+    title: "Updated title",
+    content: {
+      type: "doc",
+      content: [
+        {
+          type: "paragraph",
+          content: [{ type: "text", text: "Old content" }],
+        },
+      ],
+    },
+  });
 });
 
 test("hides the editor when a note fails to load", async () => {

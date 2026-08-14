@@ -1,6 +1,7 @@
 import { EditorContent, useEditor, type JSONContent } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
 import { useEffect, type ReactElement } from "react";
+
+import { richTextExtensions } from "../rich-text";
 
 interface RichTextEditorProps {
   content: JSONContent;
@@ -16,13 +17,7 @@ function RichTextEditor({
   onChange,
 }: RichTextEditorProps): ReactElement {
   const editor = useEditor({
-    extensions: [
-      StarterKit.configure({
-        heading: {
-          levels: [2, 3],
-        },
-      }),
-    ],
+    extensions: richTextExtensions,
     content,
     editable: !disabled,
     autofocus: autoFocus ? "end" : false,

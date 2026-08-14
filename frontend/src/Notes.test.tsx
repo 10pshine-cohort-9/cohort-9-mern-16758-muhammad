@@ -3,6 +3,7 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 
 import NoteEditorPage from "./pages/NoteEditorPage";
 import NotesPage from "./pages/NotesPage";
+import { isRichTextContent } from "./rich-text";
 
 const fetchMock = jest.fn() as jest.MockedFunction<typeof fetch>;
 
@@ -22,6 +23,22 @@ function mockResponse(status: number, body?: unknown): Response {
 function readRequestBody(options: RequestInit | undefined): unknown {
   expect(typeof options?.body).toBe("string");
   return JSON.parse(options?.body as string) as unknown;
+}
+
+function deeplyNestedContent(): Record<string, unknown> {
+  let node: Record<string, unknown> = {
+    type: "paragraph",
+    content: [{ type: "text", text: "Too deep" }],
+  };
+
+  for (let index = 0; index < 12; index += 1) {
+    node = {
+      type: "bulletList",
+      content: [{ type: "listItem", content: [node] }],
+    };
+  }
+
+  return { type: "doc", content: [node] };
 }
 
 function renderEditor(path: string): void {
@@ -99,6 +116,16 @@ test("shows an error for an invalid notes response", async () => {
   expect(await screen.findByRole("alert")).toHaveTextContent(
     "The server returned an invalid response.",
   );
+});
+
+test("rejects unsafe rich text", () => {
+  expect(
+    isRichTextContent({
+      type: "doc",
+      content: [{ type: "codeBlock" }],
+    }),
+  ).toBe(false);
+  expect(isRichTextContent(deeplyNestedContent())).toBe(false);
 });
 
 test("shows a simple error when a notes response is not JSON", async () => {

@@ -40,11 +40,14 @@ function readNoteInput(input: unknown): {
     throw invalidNoteInput("Content must be a valid rich text document.");
   }
 
-  if (
-    noteContent.plainText.length > MAX_CONTENT_LENGTH ||
-    JSON.stringify(noteContent.content).length > MAX_DOCUMENT_LENGTH
-  ) {
+  if (noteContent.plainText.length > MAX_CONTENT_LENGTH) {
     throw invalidNoteInput("Content must not exceed 50000 characters.");
+  }
+
+  if (JSON.stringify(noteContent.content).length > MAX_DOCUMENT_LENGTH) {
+    throw invalidNoteInput(
+      "Content document must not exceed 90000 characters.",
+    );
   }
 
   return { title, ...noteContent };

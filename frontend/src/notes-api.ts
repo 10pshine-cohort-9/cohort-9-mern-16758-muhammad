@@ -1,5 +1,7 @@
 import type { JSONContent } from "@tiptap/react";
 
+import { isRichTextContent } from "./rich-text";
+
 export interface Note {
   id: string;
   title: string;
@@ -34,16 +36,6 @@ function plainTextContent(text: string): JSONContent {
 
 export function emptyNoteContent(): JSONContent {
   return plainTextContent("");
-}
-
-function isRichTextContent(value: unknown): value is JSONContent {
-  if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    return false;
-  }
-
-  const content = value as Record<string, unknown>;
-
-  return content.type === "doc" && Array.isArray(content.content);
 }
 
 function readNote(value: unknown): Note | null {

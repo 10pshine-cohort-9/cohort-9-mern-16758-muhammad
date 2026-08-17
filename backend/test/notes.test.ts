@@ -212,6 +212,25 @@ describe("notes API", () => {
     expect(searched.notes).to.have.length(1);
     expect(searched.notes[0]?.id).to.equal(created.note.id);
 
+    const titleOnlyResponse = await request(app)
+      .get("/api/notes?search=meeting&searchIn=title")
+      .set("Cookie", cookie);
+    expect((titleOnlyResponse.body as NotesResponse).notes).to.have.length(0);
+
+    const contentOnlyResponse = await request(app)
+      .get("/api/notes?search=meeting&searchIn=content")
+      .set("Cookie", cookie);
+    expect((contentOnlyResponse.body as NotesResponse).notes).to.have.length(1);
+
+    const sortedResponse = await request(app)
+      .get("/api/notes?sort=title-asc")
+      .set("Cookie", cookie);
+    const sorted = sortedResponse.body as NotesResponse;
+    expect(sorted.notes.map((note) => note.title)).to.deep.equal([
+      "Project ideas",
+      "Shopping list",
+    ]);
+
     const getResponse = await request(app)
       .get(`/api/notes/${created.note.id}`)
       .set("Cookie", cookie);
@@ -305,6 +324,12 @@ describe("notes API", () => {
     const longSearch = await request(app)
       .get(`/api/notes?search=${"a".repeat(201)}`)
       .set("Cookie", cookie);
+    const invalidSearchField = await request(app)
+      .get("/api/notes?searchIn=invalid")
+      .set("Cookie", cookie);
+    const invalidSort = await request(app)
+      .get("/api/notes?sort=invalid")
+      .set("Cookie", cookie);
 
     expect(missingTitle.status).to.equal(400);
     expect(invalidContent.status).to.equal(400);
@@ -318,5 +343,7 @@ describe("notes API", () => {
     );
     expect(invalidId.status).to.equal(400);
     expect(longSearch.status).to.equal(400);
+    expect(invalidSearchField.status).to.equal(400);
+    expect(invalidSort.status).to.equal(400);
   });
 });

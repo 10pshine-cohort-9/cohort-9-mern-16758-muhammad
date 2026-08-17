@@ -1,37 +1,93 @@
+import type { JSONContent } from "@tiptap/react";
+
+import { isRichTextContent } from "./rich-text";
+
 export interface Note {
   id: string;
   title: string;
-  content: string;
+  content: JSONContent;
+  plainText: string;
   updatedAt: string;
 }
 
 interface NotesResponse {
-  notes?: Note[];
+  notes?: unknown;
   error?: {
     message?: string;
   };
 }
 
 interface NoteResponse {
-  note?: Note;
+  note?: unknown;
   error?: {
     message?: string;
   };
 }
 
-function isNote(value: unknown): value is Note {
+function plainTextContent(text: string): JSONContent {
+  return {
+    type: "doc",
+    content: text.split("\n").map((line) => ({
+      type: "paragraph",
+      content: line ? [{ type: "text", text: line }] : undefined,
+    })),
+  };
+}
+
+export function emptyNoteContent(): JSONContent {
+  return plainTextContent("");
+}
+
+function readNote(value: unknown): Note | null {
   if (typeof value !== "object" || value === null || Array.isArray(value)) {
-    return false;
+    return null;
   }
 
   const note = value as Record<string, unknown>;
+  const content =
+    typeof note.content === "string"
+      ? plainTextContent(note.content)
+      : isRichTextContent(note.content)
+        ? note.content
+        : null;
 
-  return (
+  if (
     typeof note.id === "string" &&
     typeof note.title === "string" &&
-    typeof note.content === "string" &&
+    content &&
+    typeof note.plainText === "string" &&
     typeof note.updatedAt === "string"
-  );
+  ) {
+    return {
+      id: note.id,
+      title: note.title,
+      content,
+      plainText: note.plainText,
+      updatedAt: note.updatedAt,
+    };
+  }
+
+  return null;
+}
+
+function readNotes(value: unknown): Note[] | null {
+  if (!Array.isArray(value)) {
+    return null;
+  }
+
+  const notes: Note[] = [];
+
+  for (const valueItem of value) {
+    const note = readNote(valueItem);
+
+    if (!note) {
+      return null;
+    }
+
+    notes.push(note);
+  }
+
+  return notes;
 }
 
 export async function getNotes(search = ""): Promise<Note[]> {
@@ -52,16 +108,17 @@ export async function getNotes(search = ""): Promise<Note[]> {
     throw new Error(data.error?.message ?? "Unable to load your notes.");
   }
 
-  if (
-    typeof data !== "object" ||
-    data === null ||
-    !Array.isArray(data.notes) ||
-    !data.notes.every(isNote)
-  ) {
+  if (typeof data !== "object" || data === null) {
     throw new Error("The server returned an invalid response.");
   }
 
-  return data.notes;
+  const notes = readNotes(data.notes);
+
+  if (!notes) {
+    throw new Error("The server returned an invalid response.");
+  }
+
+  return notes;
 }
 
 export async function getNote(noteId: string): Promise<Note> {
@@ -79,16 +136,22 @@ export async function getNote(noteId: string): Promise<Note> {
     throw new Error(data.error?.message ?? "Unable to load this note.");
   }
 
-  if (typeof data !== "object" || data === null || !isNote(data.note)) {
+  if (typeof data !== "object" || data === null) {
     throw new Error("The server returned an invalid response.");
   }
 
-  return data.note;
+  const note = readNote(data.note);
+
+  if (!note) {
+    throw new Error("The server returned an invalid response.");
+  }
+
+  return note;
 }
 
 export async function createNote(
   title: string,
-  content: string,
+  content: JSONContent,
 ): Promise<Note> {
   let response: Response;
   let data: NoteResponse;
@@ -110,17 +173,23 @@ export async function createNote(
     throw new Error(data.error?.message ?? "Unable to create the note.");
   }
 
-  if (typeof data !== "object" || data === null || !isNote(data.note)) {
+  if (typeof data !== "object" || data === null) {
     throw new Error("The server returned an invalid response.");
   }
 
-  return data.note;
+  const note = readNote(data.note);
+
+  if (!note) {
+    throw new Error("The server returned an invalid response.");
+  }
+
+  return note;
 }
 
 export async function updateNote(
   noteId: string,
   title: string,
-  content: string,
+  content: JSONContent,
 ): Promise<Note> {
   let response: Response;
   let data: NoteResponse;
@@ -142,11 +211,17 @@ export async function updateNote(
     throw new Error(data.error?.message ?? "Unable to update the note.");
   }
 
-  if (typeof data !== "object" || data === null || !isNote(data.note)) {
+  if (typeof data !== "object" || data === null) {
     throw new Error("The server returned an invalid response.");
   }
 
-  return data.note;
+  const note = readNote(data.note);
+
+  if (!note) {
+    throw new Error("The server returned an invalid response.");
+  }
+
+  return note;
 }
 
 export async function deleteNote(noteId: string): Promise<void> {

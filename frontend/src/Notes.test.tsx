@@ -3,6 +3,7 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 
 import NoteEditorPage from "./pages/NoteEditorPage";
 import NotesPage from "./pages/NotesPage";
+import { isRichTextContent } from "./rich-text";
 
 const fetchMock = jest.fn() as jest.MockedFunction<typeof fetch>;
 
@@ -17,6 +18,27 @@ function mockResponse(status: number, body?: unknown): Response {
     status,
     json: jest.fn().mockResolvedValue(body),
   } as unknown as Response;
+}
+
+function readRequestBody(options: RequestInit | undefined): unknown {
+  expect(typeof options?.body).toBe("string");
+  return JSON.parse(options?.body as string) as unknown;
+}
+
+function deeplyNestedContent(): Record<string, unknown> {
+  let node: Record<string, unknown> = {
+    type: "paragraph",
+    content: [{ type: "text", text: "Too deep" }],
+  };
+
+  for (let index = 0; index < 12; index += 1) {
+    node = {
+      type: "bulletList",
+      content: [{ type: "listItem", content: [node] }],
+    };
+  }
+
+  return { type: "doc", content: [node] };
 }
 
 function renderEditor(path: string): void {
@@ -45,6 +67,7 @@ test("loads and searches notes", async () => {
             id: "note-1",
             title: "Shopping list",
             content: "Buy milk",
+            plainText: "Buy milk",
             updatedAt: "2026-08-13T10:00:00.000Z",
           },
         ],
@@ -57,6 +80,7 @@ test("loads and searches notes", async () => {
             id: "note-2",
             title: "Meeting notes",
             content: "Discuss the project",
+            plainText: "Discuss the project",
             updatedAt: "2026-08-13T11:00:00.000Z",
           },
         ],
@@ -94,6 +118,16 @@ test("shows an error for an invalid notes response", async () => {
   );
 });
 
+test("rejects unsafe rich text", () => {
+  expect(
+    isRichTextContent({
+      type: "doc",
+      content: [{ type: "codeBlock" }],
+    }),
+  ).toBe(false);
+  expect(isRichTextContent(deeplyNestedContent())).toBe(false);
+});
+
 test("shows a simple error when a notes response is not JSON", async () => {
   fetchMock.mockResolvedValueOnce({
     ok: true,
@@ -119,6 +153,7 @@ test("creates a note", async () => {
         id: "note-1",
         title: "New idea",
         content: "Build a notes app",
+        plainText: "Build a notes app",
         updatedAt: "2026-08-13T10:00:00.000Z",
       },
     }),
@@ -129,9 +164,12 @@ test("creates a note", async () => {
   fireEvent.change(screen.getByLabelText("Title"), {
     target: { value: "New idea" },
   });
-  fireEvent.change(screen.getByLabelText("Content"), {
-    target: { value: "Build a notes app" },
-  });
+
+  expect(screen.getByRole("button", { name: "Bold" })).toBeInTheDocument();
+  expect(
+    screen.getByRole("button", { name: "Bullet list" }),
+  ).toBeInTheDocument();
+
   fireEvent.click(screen.getByRole("button", { name: "Save" }));
 
   expect(
@@ -141,6 +179,15 @@ test("creates a note", async () => {
     "/api/notes",
     expect.objectContaining({ method: "POST" }),
   );
+
+  const createOptions = fetchMock.mock.calls[0]?.[1];
+  expect(readRequestBody(createOptions)).toEqual({
+    title: "New idea",
+    content: {
+      type: "doc",
+      content: [{ type: "paragraph" }],
+    },
+  });
 });
 
 test("edits a note", async () => {
@@ -151,6 +198,7 @@ test("edits a note", async () => {
           id: "note-1",
           title: "Old title",
           content: "Old content",
+          plainText: "Old content",
           updatedAt: "2026-08-13T10:00:00.000Z",
         },
       }),
@@ -161,6 +209,7 @@ test("edits a note", async () => {
           id: "note-1",
           title: "Updated title",
           content: "Updated content",
+          plainText: "Updated content",
           updatedAt: "2026-08-13T11:00:00.000Z",
         },
       }),
@@ -169,10 +218,9 @@ test("edits a note", async () => {
   renderEditor("/notes/note-1/edit");
 
   const titleInput = await screen.findByLabelText("Title");
+  expect(screen.getByLabelText("Content")).toHaveTextContent("Old content");
+
   fireEvent.change(titleInput, { target: { value: "Updated title" } });
-  fireEvent.change(screen.getByLabelText("Content"), {
-    target: { value: "Updated content" },
-  });
   fireEvent.click(screen.getByRole("button", { name: "Save" }));
 
   expect(
@@ -182,6 +230,20 @@ test("edits a note", async () => {
     "/api/notes/note-1",
     expect.objectContaining({ method: "PUT" }),
   );
+
+  const updateOptions = fetchMock.mock.calls[1]?.[1];
+  expect(readRequestBody(updateOptions)).toEqual({
+    title: "Updated title",
+    content: {
+      type: "doc",
+      content: [
+        {
+          type: "paragraph",
+          content: [{ type: "text", text: "Old content" }],
+        },
+      ],
+    },
+  });
 });
 
 test("hides the editor when a note fails to load", async () => {
@@ -210,6 +272,7 @@ test("deletes a note", async () => {
             id: "note-1",
             title: "Delete me",
             content: "Temporary note",
+            plainText: "Temporary note",
             updatedAt: "2026-08-13T10:00:00.000Z",
           },
         ],

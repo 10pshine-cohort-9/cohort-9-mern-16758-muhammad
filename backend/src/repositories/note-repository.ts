@@ -1,4 +1,4 @@
-import type { Note, PrismaClient } from "../generated/prisma/client.js";
+import type { Note, Prisma, PrismaClient } from "../generated/prisma/client.js";
 
 export class NoteRepository {
   private readonly database: PrismaClient;
@@ -10,14 +10,15 @@ export class NoteRepository {
   public async createNote(
     userId: string,
     title: string,
-    content: string,
+    content: Prisma.InputJsonValue,
+    plainText: string,
   ): Promise<Note> {
     return this.database.note.create({
       data: {
         userId,
         title,
         content,
-        plainText: content,
+        plainText,
       },
     });
   }
@@ -58,7 +59,8 @@ export class NoteRepository {
     userId: string,
     noteId: string,
     title: string,
-    content: string,
+    content: Prisma.InputJsonValue,
+    plainText: string,
   ): Promise<Note | null> {
     const result = await this.database.note.updateMany({
       where: {
@@ -68,7 +70,7 @@ export class NoteRepository {
       data: {
         title,
         content,
-        plainText: content,
+        plainText,
         version: { increment: 1 },
       },
     });

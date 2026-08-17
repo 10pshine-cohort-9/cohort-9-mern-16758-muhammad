@@ -10,6 +10,9 @@ export interface Note {
   updatedAt: string;
 }
 
+export type NoteSearchField = "all" | "title" | "content";
+export type NoteSort = "newest" | "oldest" | "title-asc" | "title-desc";
+
 interface NotesResponse {
   notes?: unknown;
   error?: {
@@ -90,10 +93,27 @@ function readNotes(value: unknown): Note[] | null {
   return notes;
 }
 
-export async function getNotes(search = ""): Promise<Note[]> {
-  const path = search
-    ? `/api/notes?search=${encodeURIComponent(search)}`
-    : "/api/notes";
+export async function getNotes(
+  search = "",
+  searchIn: NoteSearchField = "all",
+  sort: NoteSort = "newest",
+): Promise<Note[]> {
+  const parameters = new URLSearchParams();
+
+  if (search) {
+    parameters.set("search", search);
+  }
+
+  if (searchIn !== "all") {
+    parameters.set("searchIn", searchIn);
+  }
+
+  if (sort !== "newest") {
+    parameters.set("sort", sort);
+  }
+
+  const query = parameters.toString();
+  const path = query ? `/api/notes?${query}` : "/api/notes";
   let response: Response;
   let data: NotesResponse;
 

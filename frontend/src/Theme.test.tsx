@@ -36,15 +36,22 @@ test("switches between dark mode and light mode", async () => {
   fetchMock.mockResolvedValueOnce(mockLoggedOutResponse());
   renderApp();
 
-  fireEvent.click(await screen.findByRole("button", { name: "Dark mode" }));
+  const themeButton = await screen.findByRole("button", {
+    name: "Toggle dark mode",
+  });
+
+  expect(themeButton).toHaveAttribute("aria-pressed", "false");
+  fireEvent.click(themeButton);
 
   expect(document.documentElement).toHaveClass("dark-mode");
   expect(localStorage.getItem("theme")).toBe("dark");
+  expect(themeButton).toHaveAttribute("aria-pressed", "true");
 
-  fireEvent.click(screen.getByRole("button", { name: "Light mode" }));
+  fireEvent.click(themeButton);
 
   expect(document.documentElement).not.toHaveClass("dark-mode");
   expect(localStorage.getItem("theme")).toBe("light");
+  expect(themeButton).toHaveAttribute("aria-pressed", "false");
 });
 
 test("restores the saved dark mode", async () => {
@@ -53,8 +60,10 @@ test("restores the saved dark mode", async () => {
 
   renderApp();
 
-  expect(
-    await screen.findByRole("button", { name: "Light mode" }),
-  ).toBeInTheDocument();
+  const themeButton = await screen.findByRole("button", {
+    name: "Toggle dark mode",
+  });
+
+  expect(themeButton).toHaveAttribute("aria-pressed", "true");
   expect(document.documentElement).toHaveClass("dark-mode");
 });

@@ -58,7 +58,12 @@ export function createNoteRouter(
   router.get("/", async (request, response, next) => {
     try {
       const userId = await getUserId(request, authenticationService);
-      const notes = await noteService.getNotes(userId, request.query.search);
+      const notes = await noteService.getNotes(
+        userId,
+        request.query.search,
+        request.query.searchIn,
+        request.query.sort,
+      );
 
       response.status(200).json({ notes });
     } catch (error: unknown) {

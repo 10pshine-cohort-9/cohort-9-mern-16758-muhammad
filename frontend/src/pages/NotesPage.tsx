@@ -7,24 +7,46 @@ import {
 } from "react";
 import { Link } from "react-router-dom";
 
-import { deleteNote, getNotes, type Note } from "../notes-api";
+import {
+  deleteNote,
+  getNotes,
+  type Note,
+  type NoteSearchField,
+  type NoteSort,
+} from "../notes-api";
+
+interface NoteFilters {
+  search: string;
+  searchIn: NoteSearchField;
+  sort: NoteSort;
+}
 
 function NotesPage(): ReactElement {
   const [notes, setNotes] = useState<Note[]>([]);
   const [search, setSearch] = useState("");
-  const [activeSearch, setActiveSearch] = useState("");
+  const [searchIn, setSearchIn] = useState<NoteSearchField>("all");
+  const [sort, setSort] = useState<NoteSort>("newest");
+  const [activeFilters, setActiveFilters] = useState<NoteFilters>({
+    search: "",
+    searchIn: "all",
+    sort: "newest",
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const latestRequest = useRef(0);
 
-  async function loadNotes(searchValue: string): Promise<void> {
+  async function loadNotes(filters: NoteFilters): Promise<void> {
     const requestNumber = latestRequest.current + 1;
     latestRequest.current = requestNumber;
     setLoading(true);
     setError("");
 
     try {
-      const savedNotes = await getNotes(searchValue);
+      const savedNotes = await getNotes(
+        filters.search,
+        filters.searchIn,
+        filters.sort,
+      );
 
       if (requestNumber !== latestRequest.current) {
         return;
@@ -50,15 +72,15 @@ function NotesPage(): ReactElement {
   }
 
   useEffect(() => {
-    void loadNotes("");
+    void loadNotes({ search: "", searchIn: "all", sort: "newest" });
   }, []);
 
   function handleSearch(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault();
-    const cleanedSearch = search.trim();
+    const filters = { search: search.trim(), searchIn, sort };
 
-    setActiveSearch(cleanedSearch);
-    void loadNotes(cleanedSearch);
+    setActiveFilters(filters);
+    void loadNotes(filters);
   }
 
   async function handleDelete(note: Note): Promise<void> {
@@ -70,7 +92,7 @@ function NotesPage(): ReactElement {
 
     try {
       await deleteNote(note.id);
-      await loadNotes(activeSearch);
+      await loadNotes(activeFilters);
     } catch (requestError: unknown) {
       setError(
         requestError instanceof Error
@@ -108,6 +130,29 @@ function NotesPage(): ReactElement {
             placeholder="Search by title or content"
             disabled={loading}
           />
+          <select
+            aria-label="Search in"
+            value={searchIn}
+            onChange={(event) =>
+              setSearchIn(event.target.value as NoteSearchField)
+            }
+            disabled={loading}
+          >
+            <option value="all">All fields</option>
+            <option value="title">Titles only</option>
+            <option value="content">Content only</option>
+          </select>
+          <select
+            aria-label="Sort notes"
+            value={sort}
+            onChange={(event) => setSort(event.target.value as NoteSort)}
+            disabled={loading}
+          >
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+            <option value="title-asc">Title A-Z</option>
+            <option value="title-desc">Title Z-A</option>
+          </select>
           <button type="submit" disabled={loading}>
             Search
           </button>
@@ -127,13 +172,13 @@ function NotesPage(): ReactElement {
           <span className="empty-state-icon" aria-hidden="true">
             Aa
           </span>
-          <h2>{activeSearch ? "No matching notes" : "No notes yet"}</h2>
+          <h2>{activeFilters.search ? "No matching notes" : "No notes yet"}</h2>
           <p>
-            {activeSearch
+            {activeFilters.search
               ? "Try searching for something else."
               : "Write down your first idea, reminder, or thought."}
           </p>
-          {!activeSearch && (
+          {!activeFilters.search && (
             <Link className="primary-link" to="/notes/new">
               Create your first note
             </Link>

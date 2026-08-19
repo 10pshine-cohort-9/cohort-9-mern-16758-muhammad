@@ -1,6 +1,10 @@
 import type { Note } from "../generated/prisma/client.js";
 import { HttpError } from "../middleware/error-handler.js";
-import type { NoteRepository } from "../repositories/note-repository.js";
+import type {
+  NoteRepository,
+  NoteSearchField,
+  NoteSort,
+} from "../repositories/note-repository.js";
 import { parseNoteContent, type JsonObject } from "./note-content.js";
 
 const MAX_TITLE_LENGTH = 200;
@@ -65,6 +69,32 @@ function noteNotFound(): HttpError {
   return new HttpError(404, "NOTE_NOT_FOUND", "Note not found.");
 }
 
+function readSearchField(value: unknown): NoteSearchField {
+  if (value === undefined || value === "" || value === "all") {
+    return "all";
+  }
+
+  if (value === "title" || value === "content") {
+    return value;
+  }
+
+  throw invalidNoteInput("Search field must be all, title, or content.");
+}
+
+function readSort(value: unknown): NoteSort {
+  if (value === undefined || value === "" || value === "newest") {
+    return "newest";
+  }
+
+  if (value === "oldest" || value === "title-asc" || value === "title-desc") {
+    return value;
+  }
+
+  throw invalidNoteInput(
+    "Sort must be newest, oldest, title-asc, or title-desc.",
+  );
+}
+
 export class NoteService {
   private readonly repository: NoteRepository;
 
@@ -82,20 +112,27 @@ export class NoteService {
     );
   }
 
-  public getNotes(userId: string, search: unknown): Promise<Note[]> {
-    if (search === undefined || search === "") {
-      return this.repository.getNotes(userId);
-    }
-
-    if (typeof search !== "string" || search.length > MAX_SEARCH_LENGTH) {
+  public getNotes(
+    userId: string,
+    search: unknown,
+    searchIn: unknown,
+    sort: unknown,
+  ): Promise<Note[]> {
+    if (
+      search !== undefined &&
+      (typeof search !== "string" || search.length > MAX_SEARCH_LENGTH)
+    ) {
       throw invalidNoteInput("Search must be text up to 200 characters.");
     }
 
-    const cleanedSearch = search.trim();
+    const cleanedSearch = typeof search === "string" ? search.trim() : "";
 
-    return cleanedSearch
-      ? this.repository.getNotes(userId, cleanedSearch)
-      : this.repository.getNotes(userId);
+    return this.repository.getNotes(
+      userId,
+      cleanedSearch || undefined,
+      readSearchField(searchIn),
+      readSort(sort),
+    );
   }
 
   public async getNote(userId: string, noteId: unknown): Promise<Note> {

@@ -65,12 +65,14 @@ form {
 
 input,
 textarea,
+select,
 button {
   font: inherit;
 }
 
 input,
-textarea {
+textarea,
+select {
   width: 100%;
   padding: 0.75rem;
   color: #302925;
@@ -80,7 +82,8 @@ textarea {
 }
 
 input:focus,
-textarea:focus {
+textarea:focus,
+select:focus {
   border-color: #8b6252;
   outline: 3px solid rgb(139 98 82 / 15%);
 }
@@ -157,11 +160,16 @@ button:disabled {
 
 .search-controls {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.75rem;
 }
 
 .search-controls input {
-  flex: 1;
+  flex: 2 1 14rem;
+}
+
+.search-controls select {
+  flex: 1 1 9rem;
 }
 
 .notes-list {
@@ -350,5 +358,10 @@ button:disabled {
 
   .search-controls button {
     width: 100%;
+  }
+
+  .search-controls input,
+  .search-controls select {
+    flex: none;
   }
 }

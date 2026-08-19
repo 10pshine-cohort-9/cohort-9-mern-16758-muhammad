@@ -1,5 +1,8 @@
 import type { Note, Prisma, PrismaClient } from "../generated/prisma/client.js";
 
+export type NoteSearchField = "all" | "title" | "content";
+export type NoteSort = "newest" | "oldest" | "title-asc" | "title-desc";
+
 export class NoteRepository {
   private readonly database: PrismaClient;
 
@@ -23,23 +26,40 @@ export class NoteRepository {
     });
   }
 
-  public async getNotes(userId: string, search?: string): Promise<Note[]> {
+  public async getNotes(
+    userId: string,
+    search?: string,
+    searchIn: NoteSearchField = "all",
+    sort: NoteSort = "newest",
+  ): Promise<Note[]> {
+    const where: Prisma.NoteWhereInput = { userId };
+
     if (search) {
-      return this.database.note.findMany({
-        where: {
-          userId,
-          OR: [
-            { title: { contains: search, mode: "insensitive" } },
-            { plainText: { contains: search, mode: "insensitive" } },
-          ],
-        },
-        orderBy: { updatedAt: "desc" },
-      });
+      if (searchIn === "title") {
+        where.title = { contains: search, mode: "insensitive" };
+      } else if (searchIn === "content") {
+        where.plainText = { contains: search, mode: "insensitive" };
+      } else {
+        where.OR = [
+          { title: { contains: search, mode: "insensitive" } },
+          { plainText: { contains: search, mode: "insensitive" } },
+        ];
+      }
+    }
+
+    let orderBy: Prisma.NoteOrderByWithRelationInput = { updatedAt: "desc" };
+
+    if (sort === "oldest") {
+      orderBy = { updatedAt: "asc" };
+    } else if (sort === "title-asc") {
+      orderBy = { title: "asc" };
+    } else if (sort === "title-desc") {
+      orderBy = { title: "desc" };
     }
 
     return this.database.note.findMany({
-      where: { userId },
-      orderBy: { updatedAt: "desc" },
+      where,
+      orderBy,
     });
   }
 

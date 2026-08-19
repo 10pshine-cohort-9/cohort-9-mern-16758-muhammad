@@ -58,7 +58,7 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-test("loads and searches notes", async () => {
+test("loads, filters, and sorts notes", async () => {
   fetchMock
     .mockResolvedValueOnce(
       mockResponse(200, {
@@ -98,10 +98,18 @@ test("loads and searches notes", async () => {
   fireEvent.change(screen.getByLabelText("Search notes"), {
     target: { value: "meeting" },
   });
+  fireEvent.change(screen.getByLabelText("Search in"), {
+    target: { value: "content" },
+  });
+  fireEvent.change(screen.getByLabelText("Sort notes"), {
+    target: { value: "title-asc" },
+  });
   fireEvent.click(screen.getByRole("button", { name: "Search" }));
 
   expect(await screen.findByText("Meeting notes")).toBeInTheDocument();
-  expect(fetchMock).toHaveBeenLastCalledWith("/api/notes?search=meeting");
+  expect(fetchMock).toHaveBeenLastCalledWith(
+    "/api/notes?search=meeting&searchIn=content&sort=title-asc",
+  );
 });
 
 test("shows an error for an invalid notes response", async () => {

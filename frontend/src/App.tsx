@@ -14,6 +14,14 @@ function App(): ReactElement {
   const [user, setUser] = useState<AuthenticatedUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [sessionError, setSessionError] = useState("");
+  const [darkMode, setDarkMode] = useState(
+    () => localStorage.getItem("theme") === "dark",
+  );
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark-mode", darkMode);
+    localStorage.setItem("theme", darkMode ? "dark" : "light");
+  }, [darkMode]);
 
   useEffect(() => {
     async function loadSession(): Promise<void> {
@@ -49,46 +57,56 @@ function App(): ReactElement {
   }
 
   return (
-    <Routes>
-      <Route
-        path="/"
-        element={<Navigate to={user ? "/notes" : "/login"} replace />}
-      />
-      <Route
-        path="/login"
-        element={
-          user ? (
-            <Navigate to="/notes" replace />
-          ) : (
-            <LoginPage onAuthenticated={setUser} />
-          )
-        }
-      />
-      <Route
-        path="/signup"
-        element={
-          user ? (
-            <Navigate to="/notes" replace />
-          ) : (
-            <SignupPage onAuthenticated={setUser} />
-          )
-        }
-      />
-      <Route element={<ProtectedRoute isAuthenticated={Boolean(user)} />}>
-        <Route path="/notes" element={<NotesPage />} />
-        <Route path="/notes/new" element={<NoteEditorPage />} />
-        <Route path="/notes/:noteId/edit" element={<NoteEditorPage />} />
+    <>
+      <button
+        className="theme-toggle"
+        type="button"
+        onClick={() => setDarkMode(!darkMode)}
+      >
+        {darkMode ? "Light mode" : "Dark mode"}
+      </button>
+
+      <Routes>
         <Route
-          path="/profile"
+          path="/"
+          element={<Navigate to={user ? "/notes" : "/login"} replace />}
+        />
+        <Route
+          path="/login"
           element={
             user ? (
-              <ProfilePage user={user} onLogout={() => setUser(null)} />
-            ) : null
+              <Navigate to="/notes" replace />
+            ) : (
+              <LoginPage onAuthenticated={setUser} />
+            )
           }
         />
-      </Route>
-      <Route path="*" element={<NotFoundPage />} />
-    </Routes>
+        <Route
+          path="/signup"
+          element={
+            user ? (
+              <Navigate to="/notes" replace />
+            ) : (
+              <SignupPage onAuthenticated={setUser} />
+            )
+          }
+        />
+        <Route element={<ProtectedRoute isAuthenticated={Boolean(user)} />}>
+          <Route path="/notes" element={<NotesPage />} />
+          <Route path="/notes/new" element={<NoteEditorPage />} />
+          <Route path="/notes/:noteId/edit" element={<NoteEditorPage />} />
+          <Route
+            path="/profile"
+            element={
+              user ? (
+                <ProfilePage user={user} onLogout={() => setUser(null)} />
+              ) : null
+            }
+          />
+        </Route>
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
+    </>
   );
 }
 

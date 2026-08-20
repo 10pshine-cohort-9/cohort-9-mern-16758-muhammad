@@ -336,6 +336,104 @@ button:disabled {
   color: #a23f3f;
 }
 
+.theme-toggle {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1;
+  display: grid;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  font-size: 1.35rem;
+  border-radius: 50%;
+  place-items: center;
+}
+
+.theme-toggle svg {
+  width: 1.3rem;
+  height: 1.3rem;
+  fill: none;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+:root.dark-mode {
+  color: #f3e8e2;
+  background: #211a17;
+}
+
+.dark-mode main {
+  background: #2d231f;
+  border-color: #5b463d;
+  box-shadow: 0 0.75rem 2rem rgb(0 0 0 / 20%);
+}
+
+.dark-mode a {
+  color: #d8aa95;
+}
+
+.dark-mode a:hover {
+  color: #efc7b4;
+}
+
+.dark-mode .brand,
+.dark-mode .secondary-link,
+.dark-mode .rich-text-toolbar {
+  color: #f0ddd3;
+  background: #43332c;
+  border-color: #684f44;
+}
+
+.dark-mode .top-bar,
+.dark-mode .profile-row {
+  border-color: #5b463d;
+}
+
+.dark-mode .page-intro,
+.dark-mode .note-card p,
+.dark-mode .empty-state p,
+.dark-mode .profile-row span,
+.dark-mode .auth-link {
+  color: #cbb9b0;
+}
+
+.dark-mode input,
+.dark-mode textarea,
+.dark-mode select,
+.dark-mode .rich-text-content {
+  color: #f3e8e2;
+  background: #261e1a;
+  border-color: #684f44;
+}
+
+.dark-mode .note-card,
+.dark-mode .empty-state,
+.dark-mode .editor-form {
+  background: #352924;
+  border-color: #5b463d;
+}
+
+.dark-mode .empty-state-icon {
+  color: #efc7b4;
+  background: #4b3931;
+}
+
+.dark-mode .rich-text-toolbar button {
+  color: #f0ddd3;
+  background: #352924;
+  border-color: #684f44;
+}
+
+.dark-mode .rich-text-toolbar button:hover,
+.dark-mode .rich-text-toolbar button.active {
+  color: white;
+  background: #8b6252;
+  border-color: #8b6252;
+}
+
 @media (max-width: 600px) {
   #root {
     padding: 1rem 0.5rem;

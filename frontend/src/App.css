@@ -58,6 +58,11 @@ a:hover {
   color: #756a65;
 }
 
+.field-help {
+  margin-top: -0.4rem;
+  color: #756a65;
+}
+
 form {
   display: grid;
   gap: 0.75rem;
@@ -396,7 +401,8 @@ button:disabled {
 .dark-mode .note-card p,
 .dark-mode .empty-state p,
 .dark-mode .profile-row span,
-.dark-mode .auth-link {
+.dark-mode .auth-link,
+.dark-mode .field-help {
   color: #cbb9b0;
 }
 

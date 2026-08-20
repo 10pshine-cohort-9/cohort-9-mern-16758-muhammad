@@ -3,6 +3,8 @@ import { Link, useNavigate } from "react-router-dom";
 
 import { registerUser, type AuthenticatedUser } from "../auth-api";
 
+const PASSWORD_MIN_LENGTH = 15;
+
 interface SignupPageProps {
   onAuthenticated: (user: AuthenticatedUser) => void;
 }
@@ -22,6 +24,11 @@ function SignupPage({ onAuthenticated }: SignupPageProps): ReactElement {
 
     if (!name.trim() || !email.trim() || !password) {
       setError("Please fill in all fields.");
+      return;
+    }
+
+    if (password.length < PASSWORD_MIN_LENGTH) {
+      setError("Password must be at least 15 characters.");
       return;
     }
 
@@ -70,9 +77,15 @@ function SignupPage({ onAuthenticated }: SignupPageProps): ReactElement {
         <input
           id="password"
           type="password"
+          minLength={PASSWORD_MIN_LENGTH}
+          maxLength={128}
+          aria-describedby="password-help"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
         />
+        <small id="password-help" className="field-help">
+          Use at least 15 characters.
+        </small>
 
         {error && (
           <p className="error" role="alert">

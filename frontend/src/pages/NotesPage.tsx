@@ -7,6 +7,7 @@ import {
 } from "react";
 import { Link } from "react-router-dom";
 
+import { downloadNotes } from "../note-file";
 import {
   deleteNote,
   getNotes,
@@ -32,6 +33,7 @@ function NotesPage(): ReactElement {
     sort: "newest",
   });
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
   const [error, setError] = useState("");
   const latestRequest = useRef(0);
 
@@ -102,12 +104,37 @@ function NotesPage(): ReactElement {
     }
   }
 
+  async function handleExport(): Promise<void> {
+    setExporting(true);
+    setError("");
+
+    try {
+      const allNotes = await getNotes();
+      downloadNotes(allNotes);
+    } catch (requestError: unknown) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Unable to export your notes.",
+      );
+    } finally {
+      setExporting(false);
+    }
+  }
+
   return (
     <main className="dashboard-page">
       <nav className="top-bar">
         <p className="brand">Shine Notes</p>
         <div className="nav-links">
           <Link to="/profile">Profile</Link>
+          <button
+            type="button"
+            onClick={() => void handleExport()}
+            disabled={loading || exporting}
+          >
+            {exporting ? "Exporting..." : "Export notes"}
+          </button>
           <Link className="primary-link" to="/notes/new">
             New note
           </Link>

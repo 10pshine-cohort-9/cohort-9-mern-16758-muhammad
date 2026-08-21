@@ -341,6 +341,11 @@ button:disabled {
   color: #a23f3f;
 }
 
+.success {
+  margin: 0 0 1rem;
+  color: #397047;
+}
+
 .theme-toggle {
   position: fixed;
   top: 1rem;
@@ -404,6 +409,10 @@ button:disabled {
 .dark-mode .auth-link,
 .dark-mode .field-help {
   color: #cbb9b0;
+}
+
+.dark-mode .success {
+  color: #9bc9a4;
 }
 
 .dark-mode input,

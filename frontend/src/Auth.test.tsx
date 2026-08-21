@@ -98,7 +98,7 @@ test("creates an account and opens the notes page", async () => {
     target: { value: "umer@example.com" },
   });
   fireEvent.change(screen.getByLabelText("Password"), {
-    target: { value: "password123" },
+    target: { value: "correct-password" },
   });
   fireEvent.click(screen.getByRole("button", { name: "Create account" }));
 

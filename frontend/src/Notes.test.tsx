@@ -320,7 +320,15 @@ test("exports all notes", async () => {
   const note = {
     id: "note-1",
     title: "Export me",
-    content: "Note content",
+    content: {
+      type: "doc",
+      content: [
+        {
+          type: "paragraph",
+          content: [{ type: "text", text: "Note content" }],
+        },
+      ],
+    },
     plainText: "Note content",
     updatedAt: "2026-08-22T10:00:00.000Z",
   };
@@ -358,7 +366,15 @@ test("imports a text file", async () => {
   const importedNote = {
     id: "note-2",
     title: "Ideas",
-    content: "First idea",
+    content: {
+      type: "doc",
+      content: [
+        {
+          type: "paragraph",
+          content: [{ type: "text", text: "First idea" }],
+        },
+      ],
+    },
     plainText: "First idea",
     updatedAt: "2026-08-22T11:00:00.000Z",
   };

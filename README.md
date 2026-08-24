@@ -1,45 +1,56 @@
 # Shine Notes
 
-A full-stack notes application for the 10Pearls Shine MERN internship. The
-current implementation contains the Node.js/TypeScript backend foundation,
-PostgreSQL persistence, and the authentication domain layer.
+Shine Notes is a full-stack application for securely creating and managing
+personal notes. It was developed as part of the 10Pearls Shine MERN internship,
+using PostgreSQL as the approved database option.
 
-## Prerequisites
+## Project details
 
-- Node.js 22.16.0 or newer within the Node 22 release line
-- npm 10.9.2 or newer
-- Docker Desktop with Docker Compose
+- **Developer:** Muhammad Umer Malik
+- **Language:** TypeScript
+- **Frontend:** React, React Router, Tiptap, Vite
+- **Backend:** Node.js, Express, Pino, Zod
+- **Database:** PostgreSQL with Prisma as the approved setup
+- **Local environment:** Docker Desktop and Docker Compose
+- **Testing:** Mocha/Chai and Jest
+- **Code quality:** ESLint, Prettier, GitHub Actions, and SonarQube
 
-## Backend and database setup
+## Features
 
-1. Install dependencies with `npm install`.
-2. Copy `backend/.env.example` to `backend/.env`.
-3. Copy `backend/.env.test.example` to `backend/.env.test`.
-4. Start both databases with
-   `docker compose --profile test up -d postgres postgres_test`.
-5. Apply development migrations with `npm run db:migrate:deploy`.
-6. Apply test migrations with
-   `npm run db:test:migrate --workspace @shine-notes/backend`.
-7. Generate the Prisma Client with `npm run db:generate`.
-8. Run the quality gate with `npm run check`.
-9. Start the API with `npm run dev:backend`.
+- Registration, login, logout, and protected pages
+- User-specific note creation, editing, and deletion
+- Rich-text note editing
+- Search, filtering, and sorting
+- JSON export and JSON or text import
+- User profile and dark mode
+- Structured logging and global API error handling
+- Backend and frontend automated tests
 
-The health endpoint is available at `http://127.0.0.1:3000/health`.
+## Implementation highlights
 
-## Database commands
+- HTTP-only cookie-based authentication
+- User-specific authorization for every note operation
+- Prisma migrations for the PostgreSQL schema
+- Pino HTTP and error logging
+- Automated backend and frontend test coverage
+- Local SonarQube analysis with documented results
 
-| Command                                                    | Purpose                                                       |
-| ---------------------------------------------------------- | ------------------------------------------------------------- |
-| `npm run db:migrate:dev`                                   | Create and apply a migration during schema development        |
-| `npm run db:migrate:deploy`                                | Apply committed migrations without changing migration history |
-| `npm run db:migrate:status`                                | Compare the database with committed migration history         |
-| `npm run db:generate`                                      | Generate the type-safe Prisma Client                          |
-| `npm run db:studio`                                        | Open Prisma Studio for local inspection                       |
-| `npm run db:test:migrate --workspace @shine-notes/backend` | Apply migrations to the guarded test database                 |
-| `npm run db:test:status --workspace @shine-notes/backend`  | Inspect guarded test migration status                         |
+## Application screenshots
 
-Authentication integration tests use only `TEST_DATABASE_URL`. Their cleanup
-guard refuses to run unless the database name ends in `_test`.
+### Notes dashboard
 
-Local credentials in the committed environment templates are development-only.
-Real credentials and `.env` files must never be committed.
+![Notes dashboard with search, sorting, import, export, and note controls](docs/app-images/01-notes-dashboard.png)
+
+### Rich-text editor in dark mode
+
+![Rich-text note editor in dark mode](docs/app-images/03-rich-text-editor-dark.png)
+
+## Quality result
+
+The local SonarQube quality gate passed with 90.5% coverage and no security or
+reliability issues.
+
+## Documentation
+
+- [How to run the project](docs/how-to-run.md)
+- [SonarQube report](docs/sonarqube-report.md)

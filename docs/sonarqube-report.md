@@ -34,7 +34,7 @@ maintainability suggestions. Detailed screenshots are available in the
 2. Start SonarQube Community Build:
 
    ```bash
-   docker run -d --name shine-notes-sonarqube -p 127.0.0.1:9000:9000 -e SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true sonarqube:community
+   docker run -d --name shine-notes-sonarqube -p 127.0.0.1:9000:9000 -e SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true sonarqube@sha256:9026624a61cd25542a402a9e7213dd7dbb39724ac9597e331e6b85362558c079
    ```
 
 3. Open `http://localhost:9000`, create the `shine-notes` project, and generate
@@ -44,7 +44,7 @@ maintainability suggestions. Detailed screenshots are available in the
 4. Run the scanner from the repository root:
 
    ```bash
-   docker run --rm -e SONAR_HOST_URL=http://host.docker.internal:9000 -e SONAR_TOKEN -v "${PWD}:/usr/src" sonarsource/sonar-scanner-cli
+   docker run --rm -e SONAR_HOST_URL=http://host.docker.internal:9000 -e SONAR_TOKEN -v "${PWD}:/usr/src" sonarsource/sonar-scanner-cli@sha256:23ca0f137965d9dff2198074043fd48d386280bc5d0ccac8c8349cea4cf096a9
    ```
 
 The scanner reads `sonar-project.properties`, imports both LCOV files, and sends

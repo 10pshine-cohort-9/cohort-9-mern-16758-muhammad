@@ -1,4 +1,5 @@
 import {
+  type ChangeEvent,
   useEffect,
   useRef,
   useState,
@@ -7,7 +8,9 @@ import {
 } from "react";
 import { Link } from "react-router-dom";
 
+import { downloadNotes, readNotesFile } from "../note-file";
 import {
+  createNote,
   deleteNote,
   getNotes,
   type Note,
@@ -32,8 +35,12 @@ function NotesPage(): ReactElement {
     sort: "newest",
   });
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
   const latestRequest = useRef(0);
+  const fileInput = useRef<HTMLInputElement>(null);
 
   async function loadNotes(filters: NoteFilters): Promise<void> {
     const requestNumber = latestRequest.current + 1;
@@ -79,6 +86,7 @@ function NotesPage(): ReactElement {
     event.preventDefault();
     const filters = { search: search.trim(), searchIn, sort };
 
+    setMessage("");
     setActiveFilters(filters);
     void loadNotes(filters);
   }
@@ -89,6 +97,8 @@ function NotesPage(): ReactElement {
     if (!confirmed) {
       return;
     }
+
+    setMessage("");
 
     try {
       await deleteNote(note.id);
@@ -102,12 +112,96 @@ function NotesPage(): ReactElement {
     }
   }
 
+  async function handleExport(): Promise<void> {
+    setExporting(true);
+    setError("");
+    setMessage("");
+
+    try {
+      const allNotes = await getNotes();
+      downloadNotes(allNotes);
+    } catch (requestError: unknown) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Unable to export your notes.",
+      );
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  async function handleImport(
+    event: ChangeEvent<HTMLInputElement>,
+  ): Promise<void> {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+
+    if (!file) {
+      return;
+    }
+
+    setImporting(true);
+    setError("");
+    setMessage("");
+    let importedCount = 0;
+
+    try {
+      const importedNotes = await readNotesFile(file);
+
+      for (const note of importedNotes) {
+        await createNote(note.title, note.content);
+        importedCount += 1;
+      }
+
+      await loadNotes(activeFilters);
+      setMessage(
+        `Imported ${importedCount} ${importedCount === 1 ? "note" : "notes"}.`,
+      );
+    } catch (requestError: unknown) {
+      if (importedCount > 0) {
+        await loadNotes(activeFilters);
+      }
+
+      setError(
+        importedCount > 0
+          ? `Imported ${importedCount} notes, but the import could not be completed.`
+          : requestError instanceof Error
+            ? requestError.message
+            : "Unable to import your notes.",
+      );
+    } finally {
+      setImporting(false);
+    }
+  }
+
   return (
     <main className="dashboard-page">
       <nav className="top-bar">
         <p className="brand">Shine Notes</p>
         <div className="nav-links">
           <Link to="/profile">Profile</Link>
+          <input
+            ref={fileInput}
+            type="file"
+            accept=".json,.txt,application/json,text/plain"
+            onChange={(event) => void handleImport(event)}
+            hidden
+          />
+          <button
+            type="button"
+            onClick={() => fileInput.current?.click()}
+            disabled={loading || importing || exporting}
+          >
+            {importing ? "Importing..." : "Import notes"}
+          </button>
+          <button
+            type="button"
+            onClick={() => void handleExport()}
+            disabled={loading || importing || exporting}
+          >
+            {exporting ? "Exporting..." : "Export notes"}
+          </button>
           <Link className="primary-link" to="/notes/new">
             New note
           </Link>
@@ -164,6 +258,12 @@ function NotesPage(): ReactElement {
       {error && (
         <p className="error" role="alert">
           {error}
+        </p>
+      )}
+
+      {message && (
+        <p className="success" role="status">
+          {message}
         </p>
       )}
 

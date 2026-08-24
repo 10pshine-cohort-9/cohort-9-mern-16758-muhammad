@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 
 import NoteEditorPage from "./pages/NoteEditorPage";
@@ -23,6 +23,16 @@ function mockResponse(status: number, body?: unknown): Response {
 function readRequestBody(options: RequestInit | undefined): unknown {
   expect(typeof options?.body).toBe("string");
   return JSON.parse(options?.body as string) as unknown;
+}
+
+function makeFile(name: string, type: string, text: string): File {
+  const file = new File([text], name, { type });
+
+  Object.defineProperty(file, "text", {
+    value: jest.fn().mockResolvedValue(text),
+  });
+
+  return file;
 }
 
 function deeplyNestedContent(): Record<string, unknown> {
@@ -303,5 +313,112 @@ test("deletes a note", async () => {
   ).toBeInTheDocument();
   expect(fetchMock).toHaveBeenCalledWith("/api/notes/note-1", {
     method: "DELETE",
+  });
+});
+
+test("exports all notes", async () => {
+  const note = {
+    id: "note-1",
+    title: "Export me",
+    content: {
+      type: "doc",
+      content: [
+        {
+          type: "paragraph",
+          content: [{ type: "text", text: "Note content" }],
+        },
+      ],
+    },
+    plainText: "Note content",
+    updatedAt: "2026-08-22T10:00:00.000Z",
+  };
+  const createObjectUrl = jest.fn().mockReturnValue("blob:notes");
+
+  Object.defineProperty(URL, "createObjectURL", {
+    configurable: true,
+    value: createObjectUrl,
+  });
+  Object.defineProperty(URL, "revokeObjectURL", {
+    configurable: true,
+    value: jest.fn(),
+  });
+  jest
+    .spyOn(HTMLAnchorElement.prototype, "click")
+    .mockImplementation(() => undefined);
+  fetchMock
+    .mockResolvedValueOnce(mockResponse(200, { notes: [note] }))
+    .mockResolvedValueOnce(mockResponse(200, { notes: [note] }));
+
+  render(
+    <MemoryRouter>
+      <NotesPage />
+    </MemoryRouter>,
+  );
+
+  await screen.findByText("Export me");
+  fireEvent.click(screen.getByRole("button", { name: "Export notes" }));
+
+  await waitFor(() => expect(createObjectUrl).toHaveBeenCalled());
+  expect(fetchMock).toHaveBeenLastCalledWith("/api/notes");
+});
+
+test("imports a text file", async () => {
+  const importedNote = {
+    id: "note-2",
+    title: "Ideas",
+    content: {
+      type: "doc",
+      content: [
+        {
+          type: "paragraph",
+          content: [{ type: "text", text: "First idea" }],
+        },
+      ],
+    },
+    plainText: "First idea",
+    updatedAt: "2026-08-22T11:00:00.000Z",
+  };
+
+  fetchMock
+    .mockResolvedValueOnce(mockResponse(200, { notes: [] }))
+    .mockResolvedValueOnce(mockResponse(201, { note: importedNote }))
+    .mockResolvedValueOnce(mockResponse(200, { notes: [importedNote] }));
+
+  render(
+    <MemoryRouter>
+      <NotesPage />
+    </MemoryRouter>,
+  );
+
+  await screen.findByRole("heading", { name: "No notes yet" });
+  const fileInput =
+    document.querySelector<HTMLInputElement>('input[type="file"]');
+  expect(fileInput).not.toBeNull();
+
+  fireEvent.change(fileInput as HTMLInputElement, {
+    target: {
+      files: [makeFile("Ideas.txt", "text/plain", "First idea")],
+    },
+  });
+
+  expect(await screen.findByRole("status")).toHaveTextContent(
+    "Imported 1 note.",
+  );
+  expect(fetchMock).toHaveBeenNthCalledWith(
+    2,
+    "/api/notes",
+    expect.objectContaining({ method: "POST" }),
+  );
+  expect(readRequestBody(fetchMock.mock.calls[1]?.[1])).toEqual({
+    title: "Ideas",
+    content: {
+      type: "doc",
+      content: [
+        {
+          type: "paragraph",
+          content: [{ type: "text", text: "First idea" }],
+        },
+      ],
+    },
   });
 });
